@@ -5,8 +5,7 @@ from nltk.corpus import cmudict
 class Utils:
     @staticmethod
     def numof_words(self, text):
-        words = text.split(" ")
-        return words.len()
+        return text.split(" ").len()
 
     # May require preprocessor for words
     @staticmethod
@@ -27,4 +26,6 @@ class Utils:
             counter += [len(list(y for y in x if y[-1].isdigit()))
                         for x in d[word.lower()]].__len__()
         return counter
+
+
 

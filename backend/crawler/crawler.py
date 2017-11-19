@@ -1,7 +1,10 @@
 import newspaper
 
+from langdetect import detect, language
+
 from backend.crawler.Utils import Utils
 from backend.crawler.txtops import TextOps
+
 
 
 class Crawler:
@@ -26,7 +29,7 @@ class Crawler:
             i += 1
             print("Initialising paper: " + source_url)
             paper = newspaper.build(source_url,
-                                    memoize_articles=False,
+                                    memoize_articles=True,
                                     keep_article_html=True,
                                     fetch_images=False)
             # Category already downloaded, bad solution
@@ -46,10 +49,11 @@ class Crawler:
                                 if Utils().is_eng_suffix(None, article.source_url)]
             for article in paper.articles:
                 article.build()
-                self.textops.append_file(article.url, article.title, article.text)
-                print(article.meta_lang)
-                print(article.url)
-                print(article.title)
-                print(article.summary)
-                print("----------------------------------------")
+                if detect(article.text) == "en":
+                    self.textops.append_file(article.url, article.title, article.text)
+                    print(article.meta_lang)
+                    print(article.url)
+                    print(article.title)
+                    print(article.summary)
+                    print("----------------------------------------")
 
