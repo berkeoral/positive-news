@@ -1,20 +1,19 @@
-from threading import Thread
-
 import time
+import threading
 
 from backend.crawler.crawler import Crawler
 
-CRAWLER_CALL_SPACE = 60
+CRAWLER_CALL_INTERVAL = 5
+CRAWLER_INIT_PADDING = 5
+CRAWLER_THREAD_NAME = "non_deamon"
 
 
 def __start_crawler():
-    crawler_thread = Thread(target=Crawler().crawl(), args=())
-    while True:
-        if crawler_thread.is_alive():
-            print("Starting Crawler")
-            crawler_thread.start()
-        time.sleep(CRAWLER_CALL_SPACE)
-
+    print("Starting crawler")
+    crawler_thread = threading.Thread(target=Crawler().crawl)
+    crawler_thread.start()
+    crawler_thread.join()
+    __start_crawler()
 
 def main():
     __start_crawler()

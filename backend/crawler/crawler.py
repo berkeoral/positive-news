@@ -20,26 +20,33 @@ class Crawler:
 
     def __init_papers(self):
         source_urls = self.__get_sources()
+        i = 0
         for source_url in source_urls:
+            if i == 1:
+                break
+            i += 1
             print("Initialising paper: " + source_url)
             paper = newspaper.build(source_url,
-                                    memoize_articles=True,
+                                    memoize_articles=False,
                                     keep_article_html=True,
                                     fetch_images=False)
             # Category already downloaded, bad solution
+            #   > sometimes prefix contains country code
             #   > solution is by changing newspaper's source class
-            paper.categories = [category for category in paper.categories
-                           if Utils().is_eng_tld(None, category.url)]
+            #paper.categories = [category for category in paper.categories
+            #                    if Utils().is_eng_suffix(None, category.url)]
             self.papers.append(paper)
 
     # TODO separate non-english articles
     def __start_crawl(self):
-        print(self.papers[0].size())
+        print("Initialized \" " + str(self.papers.__len__()) + " \" articles, starting to crawl articles")
         for paper in self.papers:
+            paper.articles = [article for article in paper.articles
+                                if Utils().is_eng_suffix(None, article.url)]
+            paper.articles = [article for article in paper.articles
+                                if Utils().is_eng_suffix(None, article.source_url)]
             for article in paper.articles:
                 article.build()
-                if article.config._language is not "en":
-                    continue
                 self.textops.append_file(article.url, article.title, article.text)
                 print(article.meta_lang)
                 print(article.url)
@@ -47,10 +54,10 @@ class Crawler:
                 print(article.summary)
                 print("----------------------------------------")
 
-
 class Utils:
+
     @staticmethod
-    def is_eng_tld(self, url):
+    def is_eng_suffix(self, url):
         result = tldextract.extract(url)
         if result.suffix == "com":
             return True
@@ -64,8 +71,24 @@ class Utils:
             return True
         elif result.suffix == "com.au":
             return True
-        elif result.suffix == "ca":
-            return True
-        elif result.suffix == "com.ca":
-            return True
         return False
+
+    # Not complete
+    # Further trims down - easing job of nlp
+    @staticmethod
+    def is_eng_subdomain(self, url):
+        result = tldextract.extract(url)
+        debug = result.subdomain
+        if "es" in result.suffix:
+            return False
+        elif "it" in result.suffix:
+            return False
+        elif "mx" in result.suffix:
+            return False
+        elif "de" in result.suffix:
+            return False
+        elif "fr" in result.suffix:
+            return False
+        elif "kr" in result.suffix:
+            return False
+        return True
