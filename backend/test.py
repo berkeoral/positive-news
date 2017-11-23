@@ -1,7 +1,10 @@
 import time
 import threading
 
+import newspaper
+
 from backend.crawler.crawler import Crawler
+from backend.crawler.news_sources.source import Sources
 from backend.crawler.txtops import TextOps
 
 CRAWLER_CALL_INTERVAL = 5
@@ -11,7 +14,7 @@ CRAWLER_THREAD_NAME = "non_deamon"
 
 def __start_crawler():
     print("Starting crawler")
-    arrl = TextOps().records_as_list()
+    arr = TextOps().records_as_list()
     crawler_thread = threading.Thread(target=Crawler().crawl)
     crawler_thread.start()
     crawler_thread.join()

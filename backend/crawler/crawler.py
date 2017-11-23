@@ -3,6 +3,7 @@ import newspaper
 from langdetect import detect, language
 
 from backend.crawler.Utils import Utils
+from backend.crawler.news_sources.source import Sources
 from backend.crawler.txtops import TextOps
 
 
@@ -12,36 +13,35 @@ class Crawler:
         self.papers = []
         self.textops = TextOps()
 
-    def __get_sources(self):
-        sources = newspaper.popular_urls()
-        return sources
-
     def crawl(self):
         self.__init_papers()
         self.__start_crawl()
 
     def __init_papers(self):
-        source_urls = self.__get_sources()
+        source_urls = Sources().get_sources()
         i = 0
         for source_url in source_urls:
-            if i == 1:
-                break
-            i += 1
-            print("Initialising paper: " + source_url)
-            paper = newspaper.build(source_url,
-                                    memoize_articles=True,
-                                    keep_article_html=True,
-                                    fetch_images=False)
-            # Category already downloaded, bad solution
-            #   > sometimes prefix contains country code
-            #   > solution is by changing newspaper's source class
-            #paper.categories = [category for category in paper.categories
-            #                    if Utils().is_eng_suffix(None, category.url)]
-            self.papers.append(paper)
+            try:
+                if i == 10:
+                    break
+                i += 1
+                print("Initialising paper: " + source_url)
+                paper = newspaper.build(source_url,
+                                        memoize_articles=True,
+                                        keep_article_html=True,
+                                        fetch_images=False)
+                # Category already downloaded, bad solution
+                #   > sometimes prefix contains country code
+                #   > solution is by changing newspaper's source class
+                #paper.categories = [category for category in paper.categories
+                #                    if Utils().is_eng_suffix(None, category.url)]
+                self.papers.append(paper)
+            except:
+                print('An error occurred.')
 
     # TODO separate non-english articles
     def __start_crawl(self):
-        print("Initialized \" " + str(self.papers.__len__()) + " \" articles, starting to crawl articles")
+        print("Initialized \" " + str(self.papers.__len__()) + " \" papers, starting to crawl articles")
         for paper in self.papers:
             paper.articles = [article for article in paper.articles
                                 if Utils().is_eng_suffix(None, article.url)]

@@ -5,8 +5,9 @@ from pip._vendor.lockfile import FileLock
 class TextOps:
     def __init__(self):
         self.filename = "nlpdb.txt"
-        self.group_sep = 35
-        self.record_sep = 36
+        self.group_sep = 29
+        self.record_sep = 30
+
 
     def append_file(self, url, title, text):
         with FileLock(self.filename):
@@ -29,6 +30,8 @@ class TextOps:
                 for i in range(len(temp_list)):
                     ret_list.append(temp_list[i].split(chr(self.group_sep)))
         return ret_list
+
+
 
 
 
