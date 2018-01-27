@@ -19,12 +19,8 @@ class Crawler:
 
     def __init_papers(self):
         source_urls = Sources().get_sources()
-        i = 0
         for source_url in source_urls:
             try:
-                if i == 10:
-                    break
-                i += 1
                 print("Initialising paper: " + source_url)
                 paper = newspaper.build(source_url,
                                         memoize_articles=True,
@@ -33,7 +29,7 @@ class Crawler:
                 # Category already downloaded, bad solution
                 #   > sometimes prefix contains country code
                 #   > solution is by changing newspaper's source class
-                #paper.categories = [category for category in paper.categories
+                # paper.categories = [category for category in paper.categories
                 #                    if Utils().is_eng_suffix(None, category.url)]
                 self.papers.append(paper)
             except:
