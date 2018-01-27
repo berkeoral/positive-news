@@ -46,7 +46,7 @@ class Crawler:
             for article in paper.articles:
                 article.build()
                 if detect(article.text) == "en":
-                    self.textops.append_file(article.url, article.title, article.text)
+                    self.textops.append_records(article.url, article.title, article.text)
                     print(article.meta_lang)
                     print(article.url)
                     print(article.title)

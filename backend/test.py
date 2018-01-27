@@ -18,7 +18,7 @@ NLP_PRECOMPUTED_WORD_EMBEDINGS_PF = "/home/berke/Desktop/Workspace/positive-news
 
 def __start_crawler():
     print("Starting crawler")
-    arr = TextOps().records_as_list()
+    arr = TextOps().records_as_list(TextOps().filename)
     crawler_thread = threading.Thread(target=Crawler().crawl)
     crawler_thread.start()
     crawler_thread.join()
@@ -35,9 +35,9 @@ def __word2vec_sentiment_analysis():
 
 
 def main():
-    __word2vec_sentiment_analysis()
+    #__word2vec_sentiment_analysis()
     #__start_crawler()
-
+    TextOps().tag_papers_()
 
 if __name__ == "__main__":
     main()
