@@ -1,0 +1,9 @@
+.idea/workspace.xml
+backend/word_embeddings/
+/backend/nlp/sentiment_analysis/SIF/enwiki_vocab_min200.txt
+backend/__pycache__/
+backend/crawler/__pycache__/
+backend/crawler/news_sources/__pycache__/
+backend/nlp/__pycache__/
+backend/nlp/sentiment_analysis/SIF/__pycache__/
+backend/nlp/sentiment_analysis/__pycache__/

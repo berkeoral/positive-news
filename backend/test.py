@@ -1,19 +1,20 @@
-import time
 import threading
+import timeit
 
-import newspaper
+import time
 
 from backend.crawler.crawler import Crawler
-from backend.crawler.news_sources.source import Sources
 from backend.crawler.txtops import TextOps
-from backend.nlp.sentiment_analysis.SIF import *
+from backend.nlp.sentiment_analysis.SIF.SentenceEmbedding import SentenceEmbedding
 
 CRAWLER_CALL_INTERVAL = 5
 CRAWLER_INIT_PADDING = 5
 CRAWLER_THREAD_NAME = "non_deamon"
 
-NLP_PRECOMPUTED_WORD_EMBEDINGS_PF = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/glove.6B/glove.6B.50d.txt"
-
+WORD_EMBEDDINGS_FOLDER = "/home/berke/Desktop/Workspace/positive-news/backend/word_embeddings/"
+WORD_EMBEDDING_FILE = "glove.6B.50d.txt"
+WORD_FREQUENCIES = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/sentiment_analysis" \
+                   "/SIF/enwiki_vocab_min200.txt"
 
 
 def __start_crawler():
@@ -26,18 +27,18 @@ def __start_crawler():
 
 
 def __word2vec_sentiment_analysis():
-    print("Starting sentiment analysis")
-    arr = TextOps().records_as_list()
-    sentimentAnalysis = SIF(NLP_PRECOMPUTED_WORD_EMBEDINGS_PF)
-    for article in arr:
-        sentimentAnalysis.debug_master(article[2])
+    print("Advance stuff about to happen")
+    start = time.time()
+    sentence_embeder = SentenceEmbedding(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
+    end_of_load = time.time()
+    print("Time elapsed " + str(end_of_load - start))
     return
 
 
 def main():
-    #__word2vec_sentiment_analysis()
+    __word2vec_sentiment_analysis()
     #__start_crawler()
-    TextOps().tag_papers_()
+    #TextOps().tag_papers_()
 
 if __name__ == "__main__":
     main()
