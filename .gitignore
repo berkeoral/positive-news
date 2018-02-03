@@ -7,3 +7,5 @@ backend/crawler/news_sources/__pycache__/
 backend/nlp/__pycache__/
 backend/nlp/sentiment_analysis/SIF/__pycache__/
 backend/nlp/sentiment_analysis/__pycache__/
+backend/aclImdb/
+venv/

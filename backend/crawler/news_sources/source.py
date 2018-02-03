@@ -1,7 +1,7 @@
 import os
 
 import newspaper
-from pip._vendor.lockfile import FileLock
+from pip.vendor.lockfile import FileLock
 
 
 class Sources:

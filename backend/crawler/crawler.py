@@ -1,10 +1,10 @@
 import newspaper
 
-from langdetect import detect, language
+from langdetect import detect
 
-from backend.crawler.Utils import Utils
+from backend.utils import Utils
 from backend.crawler.news_sources.source import Sources
-from backend.crawler.txtops import TextOps
+from backend.utils.txtops import TextOps
 
 
 

@@ -1,6 +1,5 @@
 import os
-from pip._vendor.lockfile import FileLock
-
+import filelock
 
 class TextOps:
     def __init__(self):
@@ -11,7 +10,7 @@ class TextOps:
 
 
     def append_records(self, url, title, text):
-        with FileLock(self.filename):
+        with filelock.FileLock(self.filename):
             if os.path.exists(self.filename):
                 mode = 'a'
             else:
@@ -22,7 +21,7 @@ class TextOps:
             file.write(text + chr(self.record_sep))
 
     def append_test(self, url, title, text, sent_class):
-        with FileLock(self.test_filename):
+        with filelock.FileLock(self.test_filename):
             if os.path.exists(self.test_filename):
                 mode = 'a'
             else:
@@ -36,7 +35,7 @@ class TextOps:
     def records_as_list(self, filename):
         temp_list = []
         ret_list = []
-        with FileLock(filename):
+        with filelock.FileLock(filename):
             with open(filename, 'r', encoding='utf-8') as file:
                 content = file.read()
                 temp_list = content.split(chr(self.record_sep))
