@@ -1,4 +1,5 @@
 """
+Adopted from:
 @article{
     arora2017asimple,
 	author = {Sanjeev Arora and Yingyu Liang and Tengyu Ma},
@@ -13,30 +14,39 @@ from backend.nlp.utils import Utils
 import tensorflow as tf
 import numpy as np
 from sklearn.decomposition import TruncatedSVD
-
+from nltk.stem.snowball import SnowballStemmer
+from hunspell import HunSpell
 
 class SentenceEmbedding:
     def __init__(self, word_embeddings_path, word_frequencies_path):
         self.word_embeddings_path = word_embeddings_path
         self.glove_vocab = []
         self.embedding_dictionary = {}
-        self.get_embedings()
-        self.word_frequencies = {}  # Glove vocabulary contain word_frequencies vocabulary
+        self.get_embeddings()
+        self.word_weights = {}  # Glove vocabulary contains word_frequencies vocabulary
         self.word_frequencies_path = word_frequencies_path
-        self.get_frequencies()
+        self.get_weights()
         self.glove_vocab_size = len(self.glove_vocab)
         self.glove_embedding_dim = len(self.embedding_dictionary[self.glove_vocab[0]])
+        self.snowball_stemmer = SnowballStemmer("english")
+
+    def __preprocess_sentence(self, sentence):
+        sentence = (list(set(sentence.split())))
+        sentence = [(word).lower() for word in sentence]
+        sentence = [word for word in sentence if word in self.embedding_dictionary and word in self.word_weights]
+        return sentence
 
     def __weighted_sentence_average(self, sentence):
-        sentence = list(set(sentence))  # remove duplicate words from sentence
-        embedding = np.zeros(1, self.glove_embedding_dim)
-        word_vectors = np.array(len(sentence), self.glove_embedding_dim)
-        word_weights = np.array(1, len(sentence))
+        sentence = self.__preprocess_sentence(sentence)
+        if len(sentence) == 0:
+            return None
+        word_vectors = np.empty([len(sentence), self.glove_embedding_dim], dtype=float)
+        word_weights = np.empty(len(sentence), dtype=float)
         for i in range(len(sentence)):
             word_vectors[i] = self.embedding_dictionary[sentence[i]]
-            word_weights[0][i] = self.word_frequencies[sentence[i]]
-        embedding[0] = word_weights[1, :].dot(word_vectors[:, :]) / np.count_nonzero(word_weights[:])
-        return embedding
+            word_weights[i] = self.word_weights[sentence[i]]
+        embedding = word_weights[:].dot(word_vectors[:, :]) / np.count_nonzero(word_weights[:])
+        return embedding.reshape(1, -1)
 
     def __calc_pc(self, embedding, npc=1):
         svd = TruncatedSVD(n_components=npc, n_iter=7, random_state=0)
@@ -51,14 +61,7 @@ class SentenceEmbedding:
             n_embedding = embedding - embedding.dot(pc.transpose()).dot(pc)
         return n_embedding
 
-    def calc_sentence_embedding(self, sentence, npc):
-        embedding = self.__weighted_sentence_average(sentence)
-        if npc > 0:
-            embedding = self.__rm_pc(embedding, npc)
-        return embedding
-
-
-    def get_embedings(self):
+    def get_embeddings(self):
         file = open(self.word_embeddings_path, 'r', encoding='UTF-8')
         for line in file.readlines():
             row = line.strip().split(' ') # Space is default separator unnecessary
@@ -68,11 +71,23 @@ class SentenceEmbedding:
         file.close()
         print("Glove loaded")
 
-    def get_frequencies(self):
+    def get_weights(self, weight_param=1e-3):
         file = open(self.word_frequencies_path, 'r', encoding='UTF-8')
+        count = 0
         for line in file.readlines():
             row = line.split(' ')
-            self.word_frequencies[row[0]]=row[1]
+            self.word_weights[row[0]] = float(row[1])
+            count += float(row[1])
+        for word, value in self.word_weights.items():
+            self.word_weights[word] = weight_param / (weight_param + value / count)
         file.close()
-        print("Word frequencies loaded")
+        print("Word weights loaded")
+
+    def calc_sentence_embedding(self, sentence, npc):
+        embedding = self.__weighted_sentence_average(sentence)
+        if embedding is None:
+            return None
+        if npc > 0:
+            embedding = self.__rm_pc(embedding, npc)
+        return embedding
 
