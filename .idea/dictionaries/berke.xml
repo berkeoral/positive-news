@@ -2,6 +2,7 @@
   <dictionary name="berke">
     <words>
       <w>inclose</w>
+      <w>lstm</w>
       <w>numof</w>
       <w>stemmer</w>
       <w>tensorflow</w>

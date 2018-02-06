@@ -9,3 +9,7 @@ backend/nlp/sentiment_analysis/SIF/__pycache__/
 backend/nlp/sentiment_analysis/__pycache__/
 backend/aclImdb/
 venv/
+/backend/nlp/tf_example.py
+backend/nlp/sentiment_analysis/lstm_classifier/__pycache__/
+backend/utils/__pycache__/
+/backend/nlp/sentiment_analysis/lstm_classifier/tb_logs/

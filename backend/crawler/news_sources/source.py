@@ -1,7 +1,7 @@
 import os
 
 import newspaper
-from pip.vendor.lockfile import FileLock
+import filelock
 
 
 class Sources:
@@ -10,7 +10,7 @@ class Sources:
 
     def get_sources(self):
         ret_list = []
-        with FileLock(self.filename):
+        with filelock.FileLock(self.filename):
             with open(self.filename, 'r', encoding='utf-8') as file:
                 content = file.read()
                 temp_list = content.split(" ")
@@ -23,7 +23,7 @@ class Sources:
         return newspaper.popular_urls()
 
     def add_source(self, url):
-        with FileLock(self.filename):
+        with filelock.FileLock(self.filename):
             if os.path.exists(self.filename):
                 mode = 'a'
             else:

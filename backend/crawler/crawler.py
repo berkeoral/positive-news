@@ -2,7 +2,7 @@ import newspaper
 
 from langdetect import detect
 
-from backend.utils import Utils
+from backend.utils.utils import Utils
 from backend.crawler.news_sources.source import Sources
 from backend.utils.txtops import TextOps
 

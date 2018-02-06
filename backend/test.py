@@ -3,6 +3,8 @@ import threading
 import time
 
 from backend.crawler.crawler import Crawler
+from backend.nlp.sentiment_analysis.basic_ltsm import BasicLSTMClassifier
+from backend.nlp.sentiment_analysis.lstm_classifier.classifier import LSTMClassifier
 from backend.utils.txtops import TextOps
 from backend.nlp.sentiment_analysis.SIF.SentenceEmbedding import SentenceEmbedding
 
@@ -14,11 +16,13 @@ WORD_EMBEDDINGS_FOLDER = "/home/berke/Desktop/Workspace/positive-news/backend/wo
 WORD_EMBEDDING_FILE = "glove.6B.100d.txt"
 WORD_FREQUENCIES = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/sentiment_analysis" \
                    "/SIF/enwiki_vocab_min200.txt"
-ACMIMDB_PATH = "/home/berke/Desktop/Workspace/positive-news/backend/aclImdb"
+ACMIMDB_PATH = "/home/berke/Desktop/Workspace/positive-news/backend/aclImdb/"
 ACMIMDB_TRAINING_POS_FOLDER = "train/pos/*.txt"
 ACMIMDB_TRAINING_NEG_FOLDER = "train/neg/*.txt"
 ACMIMDB_TEST_POS_FOLDER = "test/pos/*.txt"
 ACMIMDB_TEST_NEG_FOLDER = "test/neg/*.txt"
+
+LSTM_LOGDIR = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/sentiment_analysis/lstm_classifier/tb_logs"
 
 
 def __start_crawler():
@@ -30,9 +34,13 @@ def __start_crawler():
     __start_crawler()
 
 
-def __word2vec_sentiment_analysis():
-    print("Advance stuff about to happen")
+def __basic_sentiment_analysis_test():
     start = time.time()
+    print("Advance stuff about to happen")
+    training_set = TextOps().acmimdb_as_list(ACMIMDB_PATH)
+    end_of_train = time.time()
+    print("Time elapsed " + str(end_of_train - start))
+    print("Training set loaded")
     sentence_embeder = SentenceEmbedding(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
     end_of_load = time.time()
     print("Time elapsed " + str(end_of_load - start))
@@ -47,9 +55,20 @@ def __word2vec_sentiment_analysis():
     print("Time elapsed " + str(end_of_execution - start))
     return
 
+def __rnn_test():
+    start = time.time()
+    print("Calculating sentence embeddings, document embeddings")
+    lstm_classifier = LSTMClassifier(ACMIMDB_PATH, WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES
+                                     , LSTM_LOGDIR)
+    init = time.time()
+    print("Time elapsed " + str(init - start))
+    print("LSTM Classifying")
+    lstm_classifier.lstm_classify()
+    end_of_execution = time.time()
+    print("Time elapsed " + str(end_of_execution - start))
 
 def main():
-    __word2vec_sentiment_analysis()
+    __rnn_test()
     #__start_crawler()
     #TextOps().tag_papers_()
 
