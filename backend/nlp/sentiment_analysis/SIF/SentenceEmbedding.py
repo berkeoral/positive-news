@@ -36,17 +36,20 @@ class SentenceEmbedding:
         sentence = [word for word in sentence if word in self.embedding_dictionary and word in self.word_weights]
         return sentence
 
-    def __weighted_sentence_average(self, sentence):
-        sentence = self.__preprocess_sentence(sentence)
-        if len(sentence) == 0:
+    def __weighted_sentence_average(self, sentences):
+        sentences = [self.__preprocess_sentence(sentence) for sentence in sentences]
+        sentences = [sentence for sentence in sentences if len(sentence) != 0]
+        if len(sentences) == 0:
             return None
-        word_vectors = np.empty([len(sentence), self.glove_embedding_dim], dtype=float)
-        word_weights = np.empty(len(sentence), dtype=float)
-        for i in range(len(sentence)):
-            word_vectors[i] = self.embedding_dictionary[sentence[i]]
-            word_weights[i] = self.word_weights[sentence[i]]
-        embedding = word_weights[:].dot(word_vectors[:, :]) / np.count_nonzero(word_weights[:])
-        return embedding.reshape(1, -1)
+        emb = np.zeros((len(sentences), self.glove_embedding_dim), dtype=float)
+        for sentence, i in zip(sentences, range(len(sentences))):
+            word_vectors = np.empty([len(sentence), self.glove_embedding_dim], dtype=float)
+            word_weights = np.empty(len(sentence), dtype=float)
+            for j in range(len(sentence)):
+                word_vectors[j] = self.embedding_dictionary[sentence[j]]
+                word_weights[j] = self.word_weights[sentence[j]]
+            emb[i, :] = word_weights[:].dot(word_vectors[:, :]) / np.count_nonzero(word_weights[:])
+        return emb
 
     def __calc_pc(self, embedding, npc=1):
         svd = TruncatedSVD(n_components=npc, n_iter=7, random_state=0)
@@ -83,8 +86,8 @@ class SentenceEmbedding:
         file.close()
         print("Word weights loaded")
 
-    def calc_sentence_embedding(self, sentence, npc):
-        embedding = self.__weighted_sentence_average(sentence)
+    def calc_sentence_embedding(self, sentences, npc):
+        embedding = self.__weighted_sentence_average(sentences)
         if embedding is None:
             return None
         if npc > 0:

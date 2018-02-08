@@ -25,15 +25,15 @@ class LSTMClassifier:
         self.raw_data = self.text_ops.acmimdb_as_list(data_dir)
         # DEBUG
         np.random.shuffle(self.raw_data)
-        self.raw_data = self.raw_data[0:100]
+        self.raw_data = self.raw_data[0:10000]
         # END DEBUG
         self.sentence_embedder = SentenceEmbedding(we_path, wf_path)
+        sentences = [r_d[2].split('.') for r_d in self.raw_data]
         for i in range(len(self.raw_data)):
             sentences = self.raw_data[i][2].split('.')
-            sentence_embeddings = [self.sentence_embedder.calc_sentence_embedding(sentence, npc=0)
-                                   for sentence in sentences]
-            sentence_embeddings = np.stack(emb[0] for emb in sentence_embeddings if emb is not None)
-            self.raw_data[i].append(sentence_embeddings)
+            sentence_embeddings = self.sentence_embedder.calc_sentence_embedding(sentences, npc=1)
+            # sentence_embeddings = np.stack(emb[0] for emb in sentence_embeddings if emb is not None) #  is this actually usefull
+            self.raw_data[i].append(sentence_embeddings)  # Hopefully sentence embeddings is not none
         self.__prepare_data()
 
     def __prepare_data(self):
@@ -74,7 +74,7 @@ class LSTMClassifier:
 
         return x_train, x_val, x_test, y_train, y_val, y_test
 
-    def lstm_classify(self):
+    def classify(self):
         # Set these directorie
         # direc = '/home/rob/Dropbox/ml_projects/LSTM/UCR_TS_Archive_2015'
         # summaries_dir = '/home/berke/Desktop/Workspace/positive-news/backend/nlp/sentiment_analysis/lstm_classifier'

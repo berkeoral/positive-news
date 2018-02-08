@@ -6,6 +6,7 @@
 Created on Mon Jan  2 12:46:39 2017
 @author: rob
 """
+import random
 
 """
 LSTM for time series classification

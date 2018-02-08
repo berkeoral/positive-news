@@ -13,3 +13,4 @@ venv/
 backend/nlp/sentiment_analysis/lstm_classifier/__pycache__/
 backend/utils/__pycache__/
 /backend/nlp/sentiment_analysis/lstm_classifier/tb_logs/
+/backend/nlp/sentiment_analysis/dnn_classifier/tb_logs/

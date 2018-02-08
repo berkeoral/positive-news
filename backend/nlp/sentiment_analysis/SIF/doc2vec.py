@@ -16,11 +16,11 @@ class doc2vec:
         return np.mean(sif_embeddings, axis=0)
 
     @staticmethod
-    def weighted_coordinate_mean(sif_embeddings):
-        if sif_embeddings is None:
+    def weighted_coordinate_mean(embs):
+        if embs is None:
             return None
-        weights = [np.math.exp(-i) for i in range(len(sif_embeddings))]
-        return np.average(sif_embeddings, axis=0, weights=weights)
+        weights = [np.math.exp(-i) for i in range(len(embs))]
+        return np.average(embs, axis=0, weights=weights)
 
     @staticmethod
     def coordinate_max(sif_embeddings):
