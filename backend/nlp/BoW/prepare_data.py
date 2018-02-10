@@ -2,21 +2,15 @@
 List of data processing functions
 """
 
-
 import numpy as np
-import tensorflow as tf
 
-from backend.nlp.sentiment_analysis.SIF.SentenceEmbedding import SentenceEmbedding
-from backend.nlp.sentiment_analysis.SIF.doc2vec import doc2vec
-
-tf.logging.set_verbosity(tf.logging.ERROR)
 
 class PrepareData:
     def __init__(self):
-        self.doc2vec = doc2vec()
+        dummy = 1
 
-    # Not working, 50% acc
-    def mean_document_embedding(self, sentence_embeddings, score):
+    @staticmethod
+    def mean_document_embedding(sentence_embeddings, score):
         """
         self.data[0].append(dat)
         self.data[1].append(label)
@@ -25,7 +19,7 @@ class PrepareData:
             score = 0
         else:
             score = 1
-        return np.array(self.doc2vec.coordinate_mean(sentence_embeddings)), np.array(score)
+        return np.array(np.mean(sentence_embeddings, axis=0)), np.array(score)
 
     # Not working
     # maybe issue with sentence embeddings
@@ -53,16 +47,6 @@ class PrepareData:
         semb = np.sum(sentence_embeddings, axis=0)
         return semb, np.array(score)
 
-    # Faster than mean_document_embedding, same acc
-    @staticmethod
-    def weighted_mean_document_embedding(sentence_embeddings, score):
-        if int(score) < 5:
-            score = 0
-        else:
-            score = 1
-        semb = doc2vec.weighted_coordinate_mean(sentence_embeddings)
-        return semb, np.array(score)
-
     @staticmethod
     def sif_document_embedding(documents, scores, _sentence_embedder):
         _score = []
@@ -71,7 +55,7 @@ class PrepareData:
                 _score.append(0)
             else:
                 _score.append(1)
-        document_embeddings = _sentence_embedder.calc_sentence_embedding(documents, npc=1)
+        document_embeddings = _sentence_embedder.weighted_bow(documents, npc=1)
         return document_embeddings, np.array(_score)
 
 
