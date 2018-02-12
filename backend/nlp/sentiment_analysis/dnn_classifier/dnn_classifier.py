@@ -7,10 +7,8 @@ class DNNClassifier(BaseModel):
     def __init__(self, data_dir, we_path, wf_path, tb_logdir):
         super().__init__(data_dir, we_path, wf_path, tb_logdir)
 
-    def classify(self, reset=True):
+    def classify(self):
         """Load the data"""
-        if reset:
-            tf.reset_default_graph()
         ratio = [0.8, 0.9]  # Ratios where to split the training and validation set
         x_train, x_val, x_test, y_train, y_val, y_test = super().separate_data(ratio)
         n, sl = x_train.shape

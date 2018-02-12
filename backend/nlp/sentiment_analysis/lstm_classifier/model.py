@@ -117,7 +117,7 @@ class Model():
             # Add histograms for variables, gradients and gradient norms.
             # The for-loop loops over all entries of the gradient and plots
             # a histogram. We cut of
-            for gradient, variable in gradients:  #plot the gradient of each trainable variable
+            for gradient, variable in gradients:  # plot the gradient of each trainable variable
                 if isinstance(gradient, ops.IndexedSlices):
                     grad_values = gradient.values
                 else:
