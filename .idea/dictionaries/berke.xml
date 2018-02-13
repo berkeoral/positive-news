@@ -5,10 +5,12 @@
       <w>inclose</w>
       <w>lstm</w>
       <w>numof</w>
+      <w>pagerank</w>
       <w>softmax</w>
       <w>stemmer</w>
       <w>tensorboard</w>
       <w>tensorflow</w>
+      <w>textrank</w>
     </words>
   </dictionary>
 </component>
