@@ -2,8 +2,8 @@
 Naive Pagerank implementation with sentence embeddings
 """
 
-from backend.nlp.BoW.bow import BoW
-from backend.nlp.BoW.prepare_data import PrepareData
+from backend.nlp.basics.bow import BoW
+from backend.nlp.basics.prepare_data import PrepareData
 from backend.utils.txtops import TextOps
 
 import numpy as np
@@ -11,10 +11,11 @@ from scipy import spatial
 
 
 class PagerankWithBOW:
-    def __init__(self, data_dir, we_path, wf_path, debug = -1):
+    def __init__(self, data_dir, embeddings, debug = -1):
         self.text_ops = TextOps()
         self.raw_data = self.text_ops.records_as_list(data_dir)
-        self.sentence_embedder = BoW(we_path, wf_path)
+        self.embeddings = embeddings
+        self.sentence_embedder = BoW(embeddings)
         np.random.shuffle(self.raw_data)
         self.prepare_data = PrepareData()
         if debug != -1:
@@ -51,7 +52,7 @@ class PagerankWithBOW:
                          dtype=float)  # :)
         return ranks
 
-    def summarize(self, summary_length= 3, max_character = 50, threshold=0.7):
+    def summarize(self, summary_length=3, max_character = 50, threshold=0.7):
         summaries = []
         originals_debug = []
         lexrank_scores = []

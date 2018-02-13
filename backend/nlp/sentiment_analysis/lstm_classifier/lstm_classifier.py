@@ -16,8 +16,8 @@ from backend.nlp.sentiment_analysis.lstm_classifier.model import Model, sample_b
 
 
 class LSTMClassifier(BaseModel):
-    def __init__(self, data_dir, we_path, wf_path, tb_logdir):
-        super().__init__(data_dir, we_path, wf_path, tb_logdir)
+    def __init__(self, data_dir, embeddings, tb_logdir):
+        super().__init__(data_dir, embeddings, tb_logdir)
 
     def classify(self):
         """Load the data"""

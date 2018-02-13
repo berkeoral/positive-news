@@ -17,5 +17,5 @@ backend/utils/__pycache__/
 backend/nlp/sentiment_analysis/dnn_classifier/__pycache__/
 interimn.odt
 subm/
-/backend/nlp/BoW/enwiki_vocab_min200.txt
+/backend/nlp/basics/enwiki_vocab_min200.txt
 /backend/nlp/sentiment_analysis/lstm_classifier/tb_dynamic_rnn/

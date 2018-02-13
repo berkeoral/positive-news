@@ -3,7 +3,7 @@ List of data processing functions
 """
 
 import numpy as np
-
+from backend.nlp.basics.embedding_ops import Embeddings
 
 class PrepareData:
     def __init__(self):
@@ -53,14 +53,14 @@ class PrepareData:
         return sentence_embeddings, np.array(score)
 
     @staticmethod
-    def just_words(article, score, sentence_embedder):
+    def just_words(article, score, embedder):
         if int(score) < 5:
             score = 0
         else:
             score = 1
         article = article.split()
         article_words = [word.lower() for word in article
-                         if word.lower() in sentence_embedder.embedding_dictionary]
+                         if word.lower() in embedder.embedding_dictionary]
         return article_words, np.array(score)
 
     # for cnn & rnn

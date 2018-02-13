@@ -1,18 +1,20 @@
 import abc
 
-from backend.nlp.BoW.bow import BoW
-from backend.nlp.BoW.prepare_data import PrepareData
+from backend.nlp.basics.bow import BoW
+from backend.nlp.basics.prepare_data import PrepareData
 from backend.utils.txtops import TextOps
+from backend.nlp.basics.embedding_ops import Embeddings
 
 import numpy as np
 
 
 class BaseModel:
-    def __init__(self, data_dir, we_path, wf_path, tb_logdir, debug = -1):
+    def __init__(self, data_dir, embeddings, tb_logdir, debug=-1):
         self.tb_logdir = tb_logdir
         self.text_ops = TextOps()
         self.raw_data = self.text_ops.acmimdb_as_list(data_dir)
-        self.sentence_embedder = BoW(we_path, wf_path)
+        self.embeddings = embeddings
+        self.sentence_embedder = BoW(embeddings)
         np.random.shuffle(self.raw_data)
         self.prepare_data = PrepareData()
         if debug != -1:
@@ -29,7 +31,7 @@ class BaseModel:
         self.data = [[], []]
         for i in range(len(self.raw_data)):
             dat, label = self.prepare_data.just_words(self.raw_data[i][2], self.raw_data[i][1]
-                                                      , self.sentence_embedder)
+                                                      , self.embeddings)
             self.data[0].append(dat)
             self.data[1].append(label)
 

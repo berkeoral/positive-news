@@ -3,9 +3,11 @@ import threading
 import time
 
 from backend.crawler.crawler import Crawler
+from backend.nlp.basics.embedding_ops import Embeddings
 from backend.nlp.sentiment_analysis.dnn_classifier.dnn_classifier import DNNClassifier
 from backend.nlp.sentiment_analysis.lstm_classifier.dynamic_rnn import DynamicRNN
 from backend.nlp.sentiment_analysis.lstm_classifier.lstm_classifier import LSTMClassifier
+from backend.nlp.summary.lexrank import LexRank
 from backend.nlp.summary.pagerank_with_bow import PagerankWithBOW
 from backend.utils.txtops import TextOps
 
@@ -15,7 +17,7 @@ CRAWLER_THREAD_NAME = "non_deamon"
 
 WORD_EMBEDDINGS_FOLDER = "/home/berke/Desktop/Workspace/positive-news/backend/word_embeddings/"
 WORD_EMBEDDING_FILE = "glove.6B.50d.txt"
-WORD_FREQUENCIES = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/BoW/enwiki_vocab_min200.txt"
+WORD_FREQUENCIES = "/home/berke/Desktop/Workspace/positive-news/backend/nlp/basics/enwiki_vocab_min200.txt"
 ACMIMDB_PATH = "/home/berke/Desktop/Workspace/positive-news/backend/aclImdb/"
 ACMIMDB_TRAINING_POS_FOLDER = "train/pos/*.txt"
 ACMIMDB_TRAINING_NEG_FOLDER = "train/neg/*.txt"
@@ -40,11 +42,15 @@ def __start_crawler():
 
 def __model_test():
     start = time.time()
-    print("Initial embedding operations")
-    model = DynamicRNN(ACMIMDB_PATH, WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
-                       WORD_FREQUENCIES, TB_DYNAMIC_RNN, debug=-1)
+    print("Loading embeddings")
+    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
+                            WORD_FREQUENCIES)
+    load = time.time()
+    print("Time elapsed " + str(load - start))
+    print("Initializing model")
+    model = DynamicRNN(ACMIMDB_PATH, embeddings, TB_DNN, debug=100)
     init = time.time()
-    print("Time elapsed " + str(init - start))
+    print("Time elapsed " + str(init - load))
     print("Classify")
     model.classify()
     end_of_execution = time.time()
@@ -53,11 +59,15 @@ def __model_test():
 
 def __summary_test():
     start = time.time()
-    print("Initial embedding operations")
-    model = PagerankWithBOW(NLPDB_FILE, WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
-                            WORD_FREQUENCIES, debug=10)
+    print("Loading embeddings")
+    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
+                            WORD_FREQUENCIES)
+    load = time.time()
+    print("Time elapsed " + str(load - start))
+    print("Initializing object")
+    model = LexRank(NLPDB_FILE, debug=10)
     init = time.time()
-    print("Time elapsed " + str(init - start))
+    print("Time elapsed " + str(init - load))
     print("Summarize")
     model.summarize()
     end_of_execution = time.time()

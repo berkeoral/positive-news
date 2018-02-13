@@ -1,11 +1,12 @@
 import tensorflow as tf
 
 from backend.nlp.sentiment_analysis.base_model import BaseModel
+from backend.nlp.basics.embedding_ops import Embeddings
 
 
 class DNNClassifier(BaseModel):
-    def __init__(self, data_dir, we_path, wf_path, tb_logdir):
-        super().__init__(data_dir, we_path, wf_path, tb_logdir)
+    def __init__(self, data_dir, embeddings, tb_logdir, debug):
+        super().__init__(data_dir, embeddings, tb_logdir, debug)
 
     def classify(self):
         """Load the data"""

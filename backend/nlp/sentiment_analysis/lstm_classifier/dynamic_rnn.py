@@ -3,11 +3,12 @@ import numpy as np
 import time
 
 from backend.nlp.sentiment_analysis.base_model import BaseModel
+from backend.nlp.basics.embedding_ops import Embeddings
 
 
 class DynamicRNN(BaseModel):
-    def __init__(self, data_dir, we_path, wf_path, tb_logdir, debug=-1):
-        super().__init__(data_dir, we_path, wf_path, tb_logdir, debug=debug)
+    def __init__(self, data_dir, embeddings, tb_logdir, debug=-1):
+        super().__init__(data_dir, embeddings, tb_logdir, debug=debug)
         self.pad_data()
 
     def pad_data(self):
@@ -15,12 +16,12 @@ class DynamicRNN(BaseModel):
         return
 
     # TODO performance: Concatenates over and over again,
-    def input_fn(self, x, y, batch_size, max_seq_len, just_words=False):
+    def input_fn(self, x, y, batch_size, max_seq_len):
         ind = np.random.choice(range(len(x)), batch_size)
         y_ret = y[ind]
         x_ret = [x[i] for i in ind]
         for i in range(len(x_ret)):
-            x_ret[i] = [self.sentence_embedder.embedding_dictionary[_word] for _word in x_ret[i]]
+            x_ret[i] = [self.embeddings.embedding_dictionary[_word] for _word in x_ret[i]]
         batch_seq_len = [len(_x) if len(_x) < max_seq_len else max_seq_len for _x in x_ret]
         x_ret = np.stack([self.prepare_data.padded_sequence(x_, 0, seq_len=max_seq_len)[0] for x_ in x_ret])
         return x_ret, y_ret, batch_seq_len
@@ -38,7 +39,7 @@ class DynamicRNN(BaseModel):
         probe = time.time()
         x_train, x_val, x_test, y_train, y_val, y_test = super().separate_data(ratio, sequential=True)
         y_train, y_val, y_test = self.__one_hot_label(y_train=y_train, y_val=y_val, y_test=y_test)
-        emb_dim = self.sentence_embedder.glove_embedding_dim
+        emb_dim = self.embeddings.glove_embedding_dim
         print("separate_data: ", time.time() - probe)
 
         # TODO move to config class
@@ -107,8 +108,7 @@ class DynamicRNN(BaseModel):
             writer = tf.summary.FileWriter(self.tb_logdir, sess.graph)
             sess.run(init)
             for step in range(training_steps):
-                batch_x, batch_y, batch_seqlen = self.input_fn(x_train, y_train, batch_size, max_seq_len,
-                                                               just_words=True)
+                batch_x, batch_y, batch_seqlen = self.input_fn(x_train, y_train, batch_size, max_seq_len)
 
                 # Run optimization op (backprop)
                 sess.run(optimizer, feed_dict={x: batch_x,
@@ -126,7 +126,7 @@ class DynamicRNN(BaseModel):
 
             print("Optimization Finished!")
             # Calculate accuracy
-            x_test, y_test, batch_seqlen = self.input_fn(x_test, y_test, len(x_test), max_seq_len, just_words=True)
+            x_test, y_test, batch_seqlen = self.input_fn(x_test, y_test, len(x_test), max_seq_len)
             print("Testing Accuracy:",
                   sess.run(accuracy, feed_dict={x: x_test,
                                                 y: y_test,
