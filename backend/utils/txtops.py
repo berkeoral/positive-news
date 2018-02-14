@@ -39,6 +39,7 @@ class TextOps:
             temp_list = content.split(chr(self.record_sep))
             for i in range(len(temp_list)):
                 ret_list.append(temp_list[i].split(chr(self.group_sep)))
+        del ret_list[-1]  # last element always empty
         return ret_list
 
     def tag_papers_(self):

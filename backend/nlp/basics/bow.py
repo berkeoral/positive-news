@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.decomposition import TruncatedSVD
 from nltk.stem.snowball import SnowballStemmer
 
+from backend.nlp.basics.preprocessing import Preprocessor
 from backend.nlp.basics.embedding_ops import Embeddings
 
 
@@ -9,10 +10,11 @@ class BoW:
     def __init__(self, embeddings):
         self.embeddings = embeddings
         self.snowball_stemmer = SnowballStemmer("english")
+        self.preprocessor = Preprocessor()
 
     def __preprocess_sentence(self, sentence):
         sentence = (list(set(sentence.split())))
-        sentence = [word.lower() for word in sentence]
+        sentence = self.preprocessor.default_preprocess(sentence, lemmatizing=False)
         sentence = [word for word in sentence
                     if word in self.embeddings.embedding_dictionary and word in self.embeddings.word_weights]
         return sentence

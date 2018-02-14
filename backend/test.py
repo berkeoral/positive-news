@@ -60,12 +60,11 @@ def __model_test():
 def __summary_test():
     start = time.time()
     print("Loading embeddings")
-    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
-                            WORD_FREQUENCIES)
+    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
     load = time.time()
     print("Time elapsed " + str(load - start))
     print("Initializing object")
-    model = LexRank(NLPDB_FILE, debug=10)
+    model = PagerankWithBOW(NLPDB_FILE, embeddings=embeddings,  debug=1000)
     init = time.time()
     print("Time elapsed " + str(init - load))
     print("Summarize")
