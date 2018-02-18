@@ -9,13 +9,7 @@ from backend.nlp.basics.embedding_ops import Embeddings
 class DynamicRNN(BaseModel):
     def __init__(self, data_dir, embeddings, tb_logdir, debug=-1):
         super().__init__(data_dir, embeddings, tb_logdir, debug=debug)
-        self.pad_data()
 
-    def pad_data(self):
-        # TODO
-        return
-
-    # TODO performance: Concatenates over and over again,
     def input_fn(self, x, y, batch_size, max_seq_len):
         ind = np.random.choice(range(len(x)), batch_size)
         y_ret = y[ind]
@@ -42,8 +36,7 @@ class DynamicRNN(BaseModel):
         emb_dim = self.embeddings.glove_embedding_dim
         print("separate_data: ", time.time() - probe)
 
-        # TODO move to config class
-        batch_size = 256
+        batch_size = 128
         training_steps = 5000
         max_seq_len = 250
         n_classes = 2
@@ -73,9 +66,9 @@ class DynamicRNN(BaseModel):
             lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden)
 
             outputs, states = tf.nn.static_rnn(lstm_cell,
-                                                x,
-                                                dtype=tf.float32,
-                                                sequence_length=tensor_sequence_length)
+                                               x,
+                                               dtype=tf.float32,
+                                               sequence_length=tensor_sequence_length)
             outputs = tf.stack(outputs)
             outputs = tf.transpose(outputs, [1, 0, 2]) # dont get this
 
@@ -117,8 +110,8 @@ class DynamicRNN(BaseModel):
                 if step % display_step == 0 or step == 0:
                     with tf.name_scope("training") as scope:
                         acc, loss, summ = sess.run([accuracy, cost, merged], feed_dict={x: batch_x,
-                                                                          y: batch_y,
-                                                                          tensor_sequence_length: batch_seqlen})
+                                                                                        y: batch_y,
+                                                                                        tensor_sequence_length: batch_seqlen})
                         print(str(step) + ":Step " + str(step * batch_size) + ", Minibatch Loss= " + \
                               "{:.6f}".format(loss) + ", Training Accuracy= " + \
                               "{:.5f}".format(acc))

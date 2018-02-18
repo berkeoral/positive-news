@@ -12,7 +12,7 @@ from backend.nlp.sentiment_analysis.base_model import BaseModel
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
-from backend.nlp.sentiment_analysis.lstm_classifier.model import Model, sample_batch, load_data
+from backend.nlp.sentiment_analysis.rnn_classifier.model import Model, sample_batch, load_data
 
 
 class LSTMClassifier(BaseModel):

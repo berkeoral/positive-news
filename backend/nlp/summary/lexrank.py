@@ -29,7 +29,8 @@ class LexRank:
     def __prepare_data(self):
         for _data in self.raw_data:
             article = self.preprocessor.sentences_of_words(_data[2])
-            article = [self.preprocessor.default_preprocess(sentence, lemmatizing=True) for sentence in article]
+            article = [self.preprocessor.default_preprocess(sentence, lemmatizing=True)
+                       for sentence in article]
             article = [sentence for sentence in article if len(sentence) != 0]
             self.data[0].append(article)
 
@@ -73,7 +74,6 @@ class LexRank:
         divisor = math.sqrt(divisor_x) * math.sqrt(divisor_y)
         return divident/divisor
 
-    # TODO Tons of bugs..
     def __form_graph(self, document, threshold=0.1):
         dim = len(document)
         graph = np.zeros((dim, dim), dtype=float)

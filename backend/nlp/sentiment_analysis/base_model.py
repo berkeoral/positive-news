@@ -7,7 +7,7 @@ from backend.nlp.basics.embedding_ops import Embeddings
 
 import numpy as np
 
-
+# TODO make bow sentence embedding optional
 class BaseModel:
     def __init__(self, data_dir, embeddings, tb_logdir, debug=-1):
         self.tb_logdir = tb_logdir
@@ -36,7 +36,7 @@ class BaseModel:
             self.data[1].append(label)
 
     def separate_data(self, ratio, sequential=False):
-        # if sequential arr dimentions are different
+        # if sequential arr dimensions are different
         if not sequential:
             x_data = np.stack(self.data[0][i] for i in range(len(self.data[0])))
         else:
