@@ -6,7 +6,6 @@ from backend.crawler.crawler import Crawler
 from backend.nlp.basics.embedding_ops import Embeddings
 from backend.nlp.sentiment_analysis.dnn_classifier.dnn_classifier import DNNClassifier
 from backend.nlp.sentiment_analysis.rnn_classifier.dynamic_rnn import DynamicRNN
-from backend.nlp.sentiment_analysis.rnn_classifier.lstm_classifier import LSTMClassifier
 from backend.nlp.sentiment_analysis.rnn_classifier.rnn_with_attention import RNNWithAttention
 from backend.nlp.summary.lexrank import LexRank
 from backend.nlp.summary.pagerank_with_bow import PagerankWithBOW
