@@ -48,6 +48,17 @@ class BoW:
         return n_embedding
 
     def weighted_bow(self, sentences, npc=0):
+        """
+        Calculates weighted BoW for given sentences. If npc is non-zero calculation is SIF embedding(A Simple but
+        Tough-to-Beat Baseline for Sentence Embeddings)
+
+        Args:
+            sentences: Array of strings containing sentences
+            npc: Number of principle components
+
+        Returns:
+            SIF embedding or weighted BoW
+        """
         embedding = self.__weighted_sentence_average(sentences)
         if embedding is None:
             return None

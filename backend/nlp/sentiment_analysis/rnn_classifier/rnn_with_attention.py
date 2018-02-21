@@ -57,7 +57,7 @@ class RNNWithAttention(BaseModel):
         # config
         ratio = [0.9, 0.9]  # Ratios where to split the training and validation set
         batch_size = 128
-        training_steps = 5000  # 5000*128=max_step=640000
+        training_steps = 750  # 750*128=max_step=96000
         keep_prob = 0.8
         max_seq_len = 300
         n_classes = 2
@@ -85,7 +85,7 @@ class RNNWithAttention(BaseModel):
                                     inputs=input, sequence_length=sequence_length, dtype=tf.float32)
             tf.summary.histogram('RNN_outputs', rnn_outputs)
 
-        # Attention level
+        # Attention layer
         with tf.name_scope('Attention'):
             attention_output, alphas = attention(rnn_outputs, attention_size, return_alphas=True)
             tf.summary.histogram('alphas', alphas)
@@ -108,27 +108,29 @@ class RNNWithAttention(BaseModel):
             accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.round(tf.sigmoid(label_predicted)), label), tf.float32))
             tf.summary.scalar('accuracy', accuracy)
 
+        # saver = tf.train.Saver()  # Not save to avoid over training
         merged = tf.summary.merge_all()
         writer = tf.summary.FileWriter(self.tb_logdir, accuracy.graph)
-        saver = tf.train.Saver()
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             print("Start training")
+            _loss = _acc = 0
             for step in tqdm(range(training_steps), file=sys.stdout,  unit="steps"):
                 x_batch, y_batch, sql_batch = self.input_fn(x_train, y_train, batch_size, max_seq_len)
-                sess.run(optimiser, feed_dict={input: x_batch,
-                                   label: y_batch,
-                                   sequence_length: sql_batch,
-                                   keep_probability: keep_prob})
+                acc_tr, loss_tr, summary_tr, opt_tr = sess.run([accuracy, loss, merged, optimiser],
+                                                               feed_dict={input: x_batch,
+                                                                          label: y_batch,
+                                                                          sequence_length: sql_batch,
+                                                                          keep_probability: keep_prob})
+                _loss += loss_tr
+                _acc += acc_tr
                 if step % display_step == 0:
-                    acc_tr, loss_tr, summary_tr = sess.run([accuracy, loss, merged],
-                                                                feed_dict={input: x_batch,
-                                                                           label: y_batch,
-                                                                           sequence_length: sql_batch,
-                                                                           keep_probability: keep_prob})
                     writer.add_summary(summary_tr, step * batch_size)
-                    tqdm.write("Step: {0}, Loss: {1}, Accuracy: {2}".format(str(step), str(loss_tr), str(acc_tr)))
+                    tqdm.write("Step: {0},\tLoss: {1},\tAccuracy: {2}".format(str(step*batch_size),
+                                                                              str(_loss/display_step),
+                                                                              str(_acc/display_step)))
+                    _loss = _acc = 0
 
             # Testing
             x_batch, y_batch, sql_batch = self.input_fn(x_test, y_test, batch_size, max_seq_len)
