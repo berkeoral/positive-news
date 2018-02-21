@@ -24,6 +24,8 @@ ACMIMDB_TRAINING_NEG_FOLDER = "train/neg/*.txt"
 ACMIMDB_TEST_POS_FOLDER = "test/pos/*.txt"
 ACMIMDB_TEST_NEG_FOLDER = "test/neg/*.txt"
 NLPDB_FILE = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlpdb.txt"
+SUMMARY_FILE = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/news_summary.csv"
+
 
 TB_LSTM = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis/rnn_classifier/tb_lstm"
 TB_DYNAMIC_RNN = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis/rnn_classifier" \
@@ -62,11 +64,11 @@ def __model_test():
 def __summary_test():
     start = time.time()
     print("Loading embeddings")
-    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
+    # embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
     load = time.time()
     print("Time elapsed " + str(load - start))
     print("Initializing object")
-    model = PagerankWithBOW(NLPDB_FILE, embeddings=embeddings,  debug=1000)
+    model = LexRank(SUMMARY_FILE, debug=-1)
     init = time.time()
     print("Time elapsed " + str(init - load))
     print("Summarize")
@@ -76,8 +78,8 @@ def __summary_test():
 
 
 def main():
-    #__summary_test()
-    __model_test()
+    __summary_test()
+    #__model_test()
     #__start_crawler()
     #TextOps().tag_papers_()
 

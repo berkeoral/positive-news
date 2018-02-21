@@ -1,3 +1,4 @@
+import csv
 import os
 import filelock
 import glob
@@ -75,6 +76,17 @@ class TextOps:
                 except IOError:
                     pass
         return acmimdb
+
+    # 0 is original text, 1 is summarized text
+    @staticmethod
+    def news_summary_as_list(source_path):
+        ret = []
+        with open(source_path, encoding="ISO-8859-1") as file:
+            readCSV = csv.reader(file, delimiter=',')
+            for row in readCSV:
+                ret.append([row[2], row[3], row[5], row[4]])
+        ret.pop(0)
+        return ret
 
 
 

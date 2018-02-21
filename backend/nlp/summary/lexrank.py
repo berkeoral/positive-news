@@ -5,6 +5,8 @@ Implementation of original Lexrank algorithm
 import math
 import numpy as np
 
+from backend.nlp.summary.eval import *
+
 from backend.nlp.basics.preprocessing import Preprocessor
 from backend.utils.txtops import TextOps
 
@@ -14,14 +16,14 @@ from nltk.tokenize import sent_tokenize
 class LexRank:
     def __init__(self, data_dir, debug=-1):
         self.text_ops = TextOps()
-        self.raw_data = self.text_ops.records_as_list(data_dir)
+        self.raw_data = self.text_ops.news_summary_as_list(data_dir)
         self.preprocessor = Preprocessor()
         self.idf = {}
         self.tf = []
         self.document_word_counts = []
         if debug > 0:
             self.raw_data = self.raw_data[:debug]
-        self.data = [[]]
+        self.data = [[], []]
         self.__prepare_data()
         self.__train_tf_idf()
         print("debug")
@@ -99,10 +101,11 @@ class LexRank:
             scores[i] = damping/dim + (1-damping)*sum
         return scores
 
-    def summarize(self, summary_length=3):
+    def summarize(self, summary_length=5):
         summaries = []
         originals_debug = []
         lexrank_scores = []
+        # Calculate summaries
         for i in range(len(self.raw_data)):
             graph = self.__form_graph(self.data[0][i])
             lexrank_scores.append(self.__rank_sentences(graph))
@@ -110,12 +113,20 @@ class LexRank:
             originals_debug.append(self.raw_data[i][2])
             sentences = sent_tokenize(self.raw_data[i][2])
             summaries.append([sentences[_ind] for _ind in summary_ind])
+        # Evaluate
+        precision = recall = f1 = 0.
         for i in range(len(summaries)):
+            summ = [summaries[i][j] for j in range(summary_length) if j < len(summaries[i])]
+            summ = ' '.join(summ)
+            reff = self.raw_data[i][3]
+            _prec, _recall, _f1 = rogue_n(summary=summ, reference=reff, n=2)
+            precision += _prec
+            recall += _recall
+            f1 += _f1
+            print("Precision {0},\tRecall {1},\tf1 {2}".format(str(_prec), str(_recall), str(_f1)))
             print("*****************************")
-            for j in range(summary_length):
-                if j < len(summaries[i]):
-                    print(summaries[i][j])
-            print("-----------------------------")
-            print(originals_debug[i])
-            print("*****************************")
+        print("*--------------------------")
+        print("Precision {0},\tRecall {1},\tf1 {2}".format(str(precision/len(summaries)),
+                                                           str(recall/len(summaries)),
+                                                           str(f1/len(summaries))))
         return summaries  # for debug
