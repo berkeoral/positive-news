@@ -26,23 +26,21 @@ class Crawler:
                                         memoize_articles=True,
                                         keep_article_html=True,
                                         fetch_images=False)
-                # Category already downloaded, bad solution
+                # Downloads non-english categories, bad solution
                 #   > sometimes prefix contains country code
-                #   > solution is by changing newspaper's source class
-                # paper.categories = [category for category in paper.categories
-                #                    if Utils().is_eng_suffix(None, category.url)]
+                paper.categories = [category for category in paper.categories
+                                    if Utils().is_eng_suffix(None, category.url)]
+                #       > not conclusive
                 self.papers.append(paper)
             except:
                 print('An error occurred.')
 
-    # TODO separate non-english articles
     def __start_crawl(self):
         print("Initialized \" " + str(self.papers.__len__()) + " \" papers, starting to crawl articles")
         for paper in self.papers:
             paper.articles = [article for article in paper.articles
-                                if Utils().is_eng_suffix(None, article.url)]
-            paper.articles = [article for article in paper.articles
-                                if Utils().is_eng_suffix(None, article.source_url)]
+                              if Utils().is_eng_suffix(None, article.url)
+                              and Utils().is_eng_suffix(None, article.source_url)]
             for article in paper.articles:
                 article.build()
                 if detect(article.text) == "en":
