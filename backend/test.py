@@ -4,7 +4,7 @@ import time
 
 from backend.crawler.crawler import Crawler
 from backend.nlp.basics.embedding_ops import Embeddings
-from backend.nlp.sentiment_analysis.dnn_classifier.dnn_classifier import DNNClassifier
+from backend.nlp.sentiment_analysis.dffn_classifier.dnn_classifier import DFNClassifier
 from backend.nlp.sentiment_analysis.rnn_classifier.dynamic_rnn import DynamicRNN
 from backend.nlp.sentiment_analysis.rnn_classifier.rnn_with_attention import RNNWithAttention
 from backend.nlp.summary.lexrank import LexRank
@@ -32,7 +32,7 @@ TB_DYNAMIC_RNN = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nl
                  "/tb_dynamic_rnn"
 TB_RNN_WITH_ATTENTION = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis" \
                         "/rnn_classifier/tb_rnn_with_attention"
-TB_DNN = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis/dnn_classifier/tb_l.sgs"
+TB_DFN = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis/dffn_classifier/tb_l.sgs"
 
 
 def __start_crawler():
@@ -64,11 +64,11 @@ def __model_test():
 def __summary_test():
     start = time.time()
     print("Loading embeddings")
-    # embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
+    embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
     load = time.time()
     print("Time elapsed " + str(load - start))
     print("Initializing object")
-    model = LexRank(SUMMARY_FILE, debug=-1)
+    model = PagerankWithBOW(SUMMARY_FILE, embeddings, debug=-1)
     init = time.time()
     print("Time elapsed " + str(init - load))
     print("Summarize")
@@ -78,8 +78,8 @@ def __summary_test():
 
 
 def main():
-    __summary_test()
-    #__model_test()
+    #__summary_test()
+    __model_test()
     #__start_crawler()
     #TextOps().tag_papers_()
 

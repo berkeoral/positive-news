@@ -12,9 +12,9 @@ venv/
 backend/nlp/sentiment_analysis/rnn_classifier/__pycache__/
 backend/utils/__pycache__/
 /backend/nlp/sentiment_analysis/rnn_classifier/tb_lstm/
-/backend/nlp/sentiment_analysis/dnn_classifier/tb_logs/
+/backend/nlp/sentiment_analysis/dffn_classifier/tb_logs/
 1708.02709.pdf
-backend/nlp/sentiment_analysis/dnn_classifier/__pycache__/
+backend/nlp/sentiment_analysis/dffn_classifier/__pycache__/
 interimn.odt
 subm/
 /backend/nlp/basics/enwiki_vocab_min200.txt
