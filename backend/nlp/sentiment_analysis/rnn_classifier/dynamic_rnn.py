@@ -60,9 +60,9 @@ class DynamicRNN(BaseModel):
                     'out': tf.Variable(tf.random_normal([n_classes]), name="softmax_bias")
                 }
         print("Internal: ", time.time() - probe)
-        def dynamicRNN(x, seq_len, weights, biases):
+        def dynamicRNN(x, _max_seq_len, weights, biases):
             probe = time.time()
-            x = tf.unstack(x, seq_len, 1)
+            x = tf.unstack(x, _max_seq_len, 1)
             lstm_cell = tf.contrib.rnn.BasicLSTMCell(n_hidden)
 
             outputs, states = tf.nn.static_rnn(lstm_cell,
@@ -70,11 +70,10 @@ class DynamicRNN(BaseModel):
                                                dtype=tf.float32,
                                                sequence_length=tensor_sequence_length)
             outputs = tf.stack(outputs)
-            outputs = tf.transpose(outputs, [1, 0, 2]) # dont get this
+            outputs = tf.transpose(outputs, [1, 0, 2])
 
-            # def not get this
             batch_size = tf.shape(outputs)[0]
-            index = tf.range(0, batch_size) * seq_len + (tensor_sequence_length - 1)
+            index = tf.range(0, batch_size) * _max_seq_len + (tensor_sequence_length - 1)
             outputs = tf.gather(tf.reshape(outputs, [-1, n_hidden]), index)
             print("dynamicRNN: ", time.time() - probe)
             return tf.matmul(outputs, weights['out']) + biases['out']

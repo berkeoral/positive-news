@@ -33,7 +33,6 @@ class RNNWithAttention(BaseModel):
         return x, seq_len
     """
 
-
     def input_fn(self, x, y, batch_size, max_seq_len):
         ind = np.random.choice(range(len(x)), batch_size)
         y_ret = y[ind]
@@ -82,7 +81,8 @@ class RNNWithAttention(BaseModel):
         # RNN layer
         with tf.name_scope('Sentence'):
             rnn_outputs, _ = tf.nn.bidirectional_dynamic_rnn(GRUCell(n_hidden), GRUCell(n_hidden),
-                                    inputs=input, sequence_length=sequence_length, dtype=tf.float32)
+                                                             inputs=input, sequence_length=sequence_length,
+                                                             dtype=tf.float32)
             tf.summary.histogram('RNN_outputs', rnn_outputs)
 
         # Attention layer
@@ -95,7 +95,8 @@ class RNNWithAttention(BaseModel):
         # Fully connected layer
         with tf.name_scope('Fully_connected_layer'):
             W = tf.Variable(
-                tf.truncated_normal([n_hidden * 2, n_classes], stddev=0.1))  # truncated_normal cuts tails of normal dist
+                tf.truncated_normal([n_hidden * 2, n_classes],
+                                    stddev=0.1))  # truncated_normal cuts tails of normal dist
             b = tf.Variable(tf.constant(0., shape=[n_classes]))
             label_predicted = tf.nn.xw_plus_b(drop, W, b)
             label_predicted = tf.squeeze(label_predicted)
@@ -116,7 +117,7 @@ class RNNWithAttention(BaseModel):
             sess.run(tf.global_variables_initializer())
             print("Start training")
             _loss = _acc = 0
-            for step in tqdm(range(training_steps), file=sys.stdout,  unit="steps"):
+            for step in tqdm(range(training_steps), file=sys.stdout, unit="steps"):
                 x_batch, y_batch, sql_batch = self.input_fn(x_train, y_train, batch_size, max_seq_len)
                 acc_tr, loss_tr, summary_tr, opt_tr = sess.run([accuracy, loss, merged, optimiser],
                                                                feed_dict={input: x_batch,
@@ -127,9 +128,9 @@ class RNNWithAttention(BaseModel):
                 _acc += acc_tr
                 if step % display_step == 0:
                     writer.add_summary(summary_tr, step * batch_size)
-                    tqdm.write("Step: {0},\tLoss: {1},\tAccuracy: {2}".format(str(step*batch_size),
-                                                                              str(_loss/display_step),
-                                                                              str(_acc/display_step)))
+                    tqdm.write("Step: {0},\tLoss: {1},\tAccuracy: {2}".format(str(step * batch_size),
+                                                                              str(_loss / display_step),
+                                                                              str(_acc / display_step)))
                     _loss = _acc = 0
 
             # Testing
@@ -139,14 +140,3 @@ class RNNWithAttention(BaseModel):
                                                 label: y_batch,
                                                 sequence_length: sql_batch,
                                                 keep_probability: keep_prob}))
-
-
-
-
-
-
-
-
-
-
-

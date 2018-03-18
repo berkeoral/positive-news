@@ -119,7 +119,7 @@ class LexRank:
             summ = [summaries[i][j] for j in range(summary_length) if j < len(summaries[i])]
             summ = ' '.join(summ)
             reff = self.raw_data[i][3]
-            _prec, _recall, _f1 = rogue_n(summary=summ, reference=reff, n=2)
+            _prec, _recall, _f1 = rogue_n(summary=summ, reference=reff, n=3)
             precision += _prec
             recall += _recall
             f1 += _f1
@@ -129,4 +129,3 @@ class LexRank:
         print("Precision {0},\tRecall {1},\tf1 {2}".format(str(precision/len(summaries)),
                                                            str(recall/len(summaries)),
                                                            str(f1/len(summaries))))
-        return summaries  # for debug
