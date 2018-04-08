@@ -10,8 +10,8 @@ def rogue_n(summary, reference, n=1):
     reference = reference.split()
 
     preprocessor = Preprocessor()
-    summary = preprocessor.default_preprocess(summary, lemmatizing=False)
-    reference = preprocessor.default_preprocess(reference, lemmatizing=False)
+    summary = preprocessor.default_preprocess(summary, lemmatizer=False)
+    reference = preprocessor.default_preprocess(reference, lemmatizer=False)
 
     def calc_n_gram(doc):
         ret = []

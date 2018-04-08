@@ -14,7 +14,7 @@ class BoW:
 
     def __preprocess_sentence(self, sentence):
         sentence = (list(set(sentence.split())))
-        sentence = self.preprocessor.default_preprocess(sentence, lemmatizing=False)
+        sentence = self.preprocessor.default_preprocess(sentence, lemmatizer=False)
         sentence = [word for word in sentence
                     if word in self.embeddings.embedding_dictionary and word in self.embeddings.word_weights]
         return sentence

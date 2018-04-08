@@ -1,7 +1,12 @@
 import csv
 import os
+import sys
+
 import filelock
 import glob
+
+from tqdm import tqdm
+
 
 class TextOps:
     def __init__(self):
@@ -79,7 +84,7 @@ class TextOps:
 
     # 0 is original text, 1 is summarized text
     @staticmethod
-    def news_summary_as_list(source_path):
+    def indian_news_summary_as_list(source_path):
         ret = []
         with open(source_path, encoding="ISO-8859-1") as file:
             readCSV = csv.reader(file, delimiter=',')
@@ -87,6 +92,24 @@ class TextOps:
                 ret.append([row[2], row[3], row[5], row[4]])
         ret.pop(0)
         return ret
+
+    @staticmethod
+    def cnn_dailymail_as_list(base_path):
+        ret = []
+        for ds in os.listdir(base_path):
+            _ds_path = base_path + "/%s" % ds
+            for file_path in tqdm(os.listdir(_ds_path), file=sys.stdout):
+                with open(_ds_path + "/%s" % file_path, encoding="utf-8") as file:
+                    content = file.read()
+                    summ_ind = content.index("@highlight")
+                    article = content[:summ_ind]
+                    highlights = content[summ_ind:].split("@highlight")
+                    highlights = [highlight for highlight in highlights if highlight != ""]
+                    ret.append([article, highlights])
+        return ret
+
+
+
 
 
 

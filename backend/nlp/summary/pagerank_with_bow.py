@@ -14,7 +14,7 @@ from scipy import spatial
 class PagerankWithBOW:
     def __init__(self, data_dir, embeddings, debug=-1):
         self.text_ops = TextOps()
-        self.raw_data = self.text_ops.news_summary_as_list(data_dir)
+        self.raw_data = self.text_ops.indian_news_summary_as_list(data_dir)
         self.embeddings = embeddings
         self.sentence_embedder = BoW(embeddings)
         #np.random.shuffle(self.raw_data)

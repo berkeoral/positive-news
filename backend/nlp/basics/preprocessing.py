@@ -1,4 +1,5 @@
 import string
+from itertools import chain
 
 import numpy as np
 from nltk.corpus import stopwords
@@ -15,13 +16,19 @@ class Preprocessor:
         self.porter = PorterStemmer()
 
     # TODO BUG: not removing " and '
-    def default_preprocess(self, input, stopwords=True, lemmatizing=True, stemming=False):
-        input = [((word.lower()).translate(str.maketrans('','',string.punctuation))).rstrip()
-                 for word in input]
-        input = [word for word in input if not any(char.isdigit() for char in word)]
-        if stopwords:
+    def default_preprocess(self, input, raw=True, remove_digit=True, remove_stopwords=False, lemmatizer=True,
+                           stemming=False):
+        if raw:
+            input = input.split()
+
+        input = [((word.lower()).translate(str.maketrans('', '', string.punctuation))).rstrip()
+                 for word in input if word != "."]
+
+        if remove_digit:
+            input = [word for word in input if not any(char.isdigit() for char in word)]
+        if remove_stopwords:
             input = [word for word in input if word not in self.stopwords]
-        if lemmatizing:
+        if lemmatizer:
             input = [self.lemmatizer.lemmatize(word) for word in input]
         if stemming:
             input = [self.porter.stem(word) for word in input]
@@ -33,6 +40,9 @@ class Preprocessor:
         input = [sentence.split() for sentence in input]
         return input
 
+    @staticmethod
+    def merge_sentences(input):
+        return "".join(input)
 
     @staticmethod
     def to_lower(input):

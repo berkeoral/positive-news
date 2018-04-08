@@ -16,7 +16,7 @@ from nltk.tokenize import sent_tokenize
 class LexRank:
     def __init__(self, data_dir, debug=-1):
         self.text_ops = TextOps()
-        self.raw_data = self.text_ops.news_summary_as_list(data_dir)
+        self.raw_data = self.text_ops.indian_news_summary_as_list(data_dir)
         self.preprocessor = Preprocessor()
         self.idf = {}
         self.tf = []
@@ -31,7 +31,7 @@ class LexRank:
     def __prepare_data(self):
         for _data in self.raw_data:
             article = self.preprocessor.sentences_of_words(_data[2])
-            article = [self.preprocessor.default_preprocess(sentence, lemmatizing=True)
+            article = [self.preprocessor.default_preprocess(sentence, lemmatizer=True)
                        for sentence in article]
             article = [sentence for sentence in article if len(sentence) != 0]
             self.data[0].append(article)
