@@ -34,3 +34,4 @@ class Sources:
     def refresh_popular_sources(self):
         for source in newspaper.popular_urls():
             self.add_source(source)
+

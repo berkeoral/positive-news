@@ -50,8 +50,8 @@ class EmbeddingsV2:
         self.most_frequent = filter_most_frequent_words
         self.vocab_size = self.embedding_dim = 0
         self.word_embeddings = None
-        self.word_to_ind_dict = {}
-        self.ind_to_word_dict = {}
+        self.word_to_ind_dict = dict()
+        self.ind_to_word_dict = dict()
         self.__get_embeddings()
 
     def __get_embeddings(self):

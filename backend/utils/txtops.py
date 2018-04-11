@@ -11,10 +11,9 @@ from tqdm import tqdm
 class TextOps:
     def __init__(self):
         self.filename = "nlpdb.txt"
-        self.test_filename= "test.txt"
+        self.test_filename = "test.txt"
         self.group_sep = 29
         self.record_sep = 30
-
 
     def append_records(self, url, title, text):
         if os.path.exists(self.filename):
@@ -25,6 +24,18 @@ class TextOps:
         file.write(url + chr(self.group_sep))
         file.write(title + chr(self.group_sep))
         file.write(text + chr(self.record_sep))
+
+    def append_records_v2(self, filename, n_record):
+        if os.path.exists(filename):
+            mode = 'a'
+        else:
+            mode = 'w'
+        file = open(filename, mode, encoding='utf-8')
+        for i in range(len(n_record)):
+            if i != len(n_record) - 1:
+                file.write(n_record[i] + chr(self.group_sep))
+            else:
+                file.write(n_record[i] + chr(self.record_sep))
 
     def append_test(self, url, title, text, sent_class):
         if os.path.exists(self.test_filename):
@@ -58,7 +69,7 @@ class TextOps:
             sent_lvl = input("-10 / 10: ")
             if sent_lvl == "e":
                 return
-            if( int(sent_lvl) <= 10 and int(sent_lvl) >= -10 ):
+            if (int(sent_lvl) <= 10 and int(sent_lvl) >= -10):
                 self.append_test(articles[test_size][0], articles[test_size][1], articles[test_size][2], sent_lvl)
                 test_size += 1
             print(" ")
@@ -70,6 +81,7 @@ class TextOps:
     def acmimdb_as_list(self, source_path):
         folders = ["train/pos/*.txt", "train/neg/*.txt", "test/pos/*.txt", "test/neg/*.txt"]
         acmimdb = []
+        pbar = tqdm(50000, file=sys.stdout)
         for folder in folders:
             for file_path in glob.glob(source_path + folder):
                 try:
@@ -80,6 +92,8 @@ class TextOps:
                         acmimdb.append([details[0], details[1].split('.')[0], content])
                 except IOError:
                     pass
+                finally:
+                    pbar.update(1)
         return acmimdb
 
     # 0 is original text, 1 is summarized text
@@ -107,20 +121,3 @@ class TextOps:
                     highlights = [highlight for highlight in highlights if highlight != ""]
                     ret.append([article, highlights])
         return ret
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
