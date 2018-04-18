@@ -83,6 +83,7 @@ class TextOps:
         acmimdb = []
         pbar = tqdm(50000, file=sys.stdout)
         for folder in folders:
+            debug = glob.glob(source_path + folder)
             for file_path in glob.glob(source_path + folder):
                 try:
                     with open(file_path, 'r', encoding='utf-8') as file:

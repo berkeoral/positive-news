@@ -131,7 +131,7 @@ class RNNWithAttention(BaseModel):
                     tqdm.write("Step: {0},\tLoss: {1},\tAccuracy: {2}".format(str(step * batch_size),
                                                                               str(_loss / display_step),
                                                                               str(_acc / display_step)))
-                    _loss = _acc = 0
+                    _loss = _acc = 0.
 
             # Testing
             x_batch, y_batch, sql_batch = self.input_fn(x_test, y_test, batch_size, max_seq_len)

@@ -14,28 +14,29 @@ from backend.nlp.basics.embedding_ops import EmbeddingsV2
 from backend.nlp.basics.preprocessing import Preprocessor
 from backend.utils.txtops import TextOps
 
+# 410/3471
 embeddings_path = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/word_embeddings/glove.6B.50d.txt"
 cnn_daily_base_path = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/CNN_Daily Mail_Dataset"
 tb_path = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/summary/abstractive/tb"
 save_path = tb_path + "/model.ckpt"
 
 hparams = contrib.training.HParams(
-    max_input_length=200,
-    max_target_length=50,
+    max_input_length=50,
+    max_target_length=15,
 
     max_vocab_size=150000,
     test_size=0.1,
 
-    batch_size=8,
+    batch_size=16,
     display_step=25,
-    epochs=3,
+    epochs=1,
 
     learning_rate=0.01,
     max_gradient_norm=5.0,  # from tf seq2seq article: "max gradient norm, is often set to a value like 5 or 1"
 
     num_layers=3,
-    n_hidden=64,
-    attention_size=64,
+    n_hidden=1000,
+    attention_size=50,
     beam_width=10,
 
     tgt_eos_id=0,
@@ -50,15 +51,14 @@ special_chars["<UNK>"] = hparams.unk_word_id
 
 # Embeddings Layer
 with tf.variable_scope("embedding"):
-    with tf.device("/cpu:0"):
-        embeddings = EmbeddingsV2(word_embeddings_path=embeddings_path,
-                                  special_chars=[key for key, value in special_chars.items()],
-                                  filter_most_frequent_words=hparams.max_vocab_size)
+    embeddings = EmbeddingsV2(word_embeddings_path=embeddings_path,
+                              special_chars=[key for key, value in special_chars.items()],
+                              filter_most_frequent_words=hparams.max_vocab_size)
 
-        word_embeddings = tf.Variable(tf.constant(0.0, shape=[embeddings.vocab_size, embeddings.embedding_dim]),
-                                      trainable=False, name="word_embeddings")
-        embedding_placeholder = tf.placeholder(tf.float32, [embeddings.vocab_size, embeddings.embedding_dim])
-        embedding_init = word_embeddings.assign(embedding_placeholder)
+    word_embeddings = tf.Variable(tf.constant(0.0, shape=[embeddings.vocab_size, embeddings.embedding_dim]),
+                                  trainable=False, name="word_embeddings")
+    embedding_placeholder = tf.placeholder(tf.float32, [embeddings.vocab_size, embeddings.embedding_dim])
+    embedding_init = word_embeddings.assign(embedding_placeholder)
     """
     word_embeddings = tf.get_variable("word_embeddings", shape=[embeddings.vocab_size, embeddings.embedding_dim],
                                       initializer=tf.constant_initializer(embeddings.word_embeddings),
@@ -67,14 +67,13 @@ with tf.variable_scope("embedding"):
 
 # Input Layer
 with tf.variable_scope("input"):
-    with tf.device("/cpu:0"):
-        input_word_indices = tf.placeholder(shape=[hparams.batch_size, hparams.max_input_length], dtype=tf.int32)
-        input_sequence_length = tf.placeholder(shape=[hparams.batch_size], dtype=tf.int32)
-        input_word_embeddings = tf.nn.embedding_lookup(word_embeddings, input_word_indices)
+    input_word_indices = tf.placeholder(shape=[hparams.batch_size, hparams.max_input_length], dtype=tf.int32)
+    input_sequence_length = tf.placeholder(shape=[hparams.batch_size], dtype=tf.int32)
+    input_word_embeddings = tf.nn.embedding_lookup(word_embeddings, input_word_indices)
 
-        target_word_indices = tf.placeholder(shape=[hparams.batch_size, hparams.max_target_length], dtype=tf.int32)
-        target_sequence_length = tf.placeholder(shape=hparams.batch_size, dtype=tf.int32)
-        target_word_embeddings = tf.nn.embedding_lookup(word_embeddings, target_word_indices)
+    target_word_indices = tf.placeholder(shape=[hparams.batch_size, hparams.max_target_length], dtype=tf.int32)
+    target_sequence_length = tf.placeholder(shape=hparams.batch_size, dtype=tf.int32)
+    target_word_embeddings = tf.nn.embedding_lookup(word_embeddings, target_word_indices)
 
 
 def create_cell():
@@ -93,43 +92,42 @@ with tf.variable_scope("encode"):
                                                        time_major=False)
 """ Decoding """
 with tf.variable_scope("decode"):
-    with tf.device("/cpu:0"):
-        train_helper = contrib.seq2seq.TrainingHelper(target_word_embeddings, target_sequence_length)
+    train_helper = contrib.seq2seq.TrainingHelper(target_word_embeddings, target_sequence_length)
 
-        # Decoder
-        base_decoder_cell = contrib.rnn.MultiRNNCell([create_cell() for _ in range(hparams.num_layers)])
+    # Decoder
+    base_decoder_cell = contrib.rnn.MultiRNNCell([create_cell() for _ in range(hparams.num_layers)])
 
-        attention_mechanism = contrib.seq2seq.BahdanauAttention(num_units=hparams.n_hidden,
-                                                                memory=encoder_outputs,
-                                                                memory_sequence_length=input_sequence_length)
+    attention_mechanism = contrib.seq2seq.BahdanauAttention(num_units=hparams.n_hidden,
+                                                            memory=encoder_outputs,
+                                                            memory_sequence_length=input_sequence_length)
 
-        decoder_cell = contrib.seq2seq.AttentionWrapper(cell=base_decoder_cell,
-                                                        attention_mechanism=attention_mechanism,
-                                                        attention_layer_size=hparams.attention_size)
+    decoder_cell = contrib.seq2seq.AttentionWrapper(cell=base_decoder_cell,
+                                                    attention_mechanism=attention_mechanism,
+                                                    attention_layer_size=hparams.attention_size)
 
-        initial_state = decoder_cell.zero_state(hparams.batch_size, tf.float32).clone(cell_state=encoder_state)
+    initial_state = decoder_cell.zero_state(hparams.batch_size, tf.float32).clone(cell_state=encoder_state)
 
-        """
-            decoder_cell_with_attention = contrib.rnn.OutputProjectionWrapper(cell=attention_cell,
-                                                                              output_size=embeddings.vocab_size)
-        """
-        projection_layer = Dense(embeddings.vocab_size,
-                                 use_bias=False,
-                                 name="DEBUGprojection_layer")
+    """
+        decoder_cell_with_attention = contrib.rnn.OutputProjectionWrapper(cell=attention_cell,
+                                                                          output_size=embeddings.vocab_size)
+    """
+    projection_layer = Dense(embeddings.vocab_size,
+                             use_bias=False,
+                             name="DEBUGprojection_layer")
 
-        decoder = contrib.seq2seq.BasicDecoder(cell=decoder_cell,
-                                               helper=train_helper,
-                                               initial_state=initial_state,
-                                               output_layer=projection_layer)
+    decoder = contrib.seq2seq.BasicDecoder(cell=decoder_cell,
+                                           helper=train_helper,
+                                           initial_state=initial_state,
+                                           output_layer=projection_layer)
 
-        """output_cell.zero_state(
-                                                   dtype=tf.float32,
-                                                   batch_size=hparams.batch_size)"""
+    """output_cell.zero_state(
+                                               dtype=tf.float32,
+                                               batch_size=hparams.batch_size)"""
 
-        final_outputs, final_state, final_sequence_lengths = contrib.seq2seq.dynamic_decode(decoder=decoder,
-                                                                                            output_time_major=True,
-                                                                                            impute_finished=True,
-                                                                                            maximum_iterations=hparams.max_target_length)
+    final_outputs, final_state, final_sequence_lengths = contrib.seq2seq.dynamic_decode(decoder=decoder,
+                                                                                        output_time_major=True,
+                                                                                        impute_finished=True,
+                                                                                        maximum_iterations=hparams.max_target_length)
 
 with tf.variable_scope("metrics"):
     logits = final_outputs.rnn_output
@@ -153,22 +151,20 @@ with tf.variable_scope("metrics"):
 
 """Inference"""
 with tf.variable_scope("decode", reuse=True):
-    with tf.device("/cpu:0"):
-        inference_helper = contrib.seq2seq.GreedyEmbeddingHelper(word_embeddings,
-                                                                 tf.fill([hparams.batch_size], hparams.tgt_sos_id),
-                                                                 hparams.tgt_eos_id)
+    inference_helper = contrib.seq2seq.GreedyEmbeddingHelper(word_embeddings,
+                                                             tf.fill([hparams.batch_size], hparams.tgt_sos_id),
+                                                             hparams.tgt_eos_id)
 
-        inference_decoder = contrib.seq2seq.BasicDecoder(decoder_cell,
-                                                         inference_helper,
-                                                         initial_state=initial_state,
-                                                         output_layer=projection_layer)
+    inference_decoder = contrib.seq2seq.BasicDecoder(decoder_cell,
+                                                     inference_helper,
+                                                     initial_state=initial_state,
+                                                     output_layer=projection_layer)
 
-        inference_outputs, inference_states, inference_lengths = contrib.seq2seq.dynamic_decode(
-            decoder=inference_decoder, maximum_iterations=tf.reduce_max(target_sequence_length), impute_finished=True)
-        # pred_summaries = inference_outputs.sample_id
+    inference_outputs, inference_states, inference_lengths = contrib.seq2seq.dynamic_decode(
+        decoder=inference_decoder, maximum_iterations=tf.reduce_max(target_sequence_length), impute_finished=True)
+    # pred_summaries = inference_outputs.sample_id
 
-        pred_summaries = inference_outputs.sample_id
-
+    pred_summaries = inference_outputs.sample_id
 
 """
 with tf.variable_scope("decode", reuse=True):
@@ -192,6 +188,7 @@ with tf.variable_scope("decode", reuse=True):
 """
 """Summary and Checkpoints"""
 # saver = tf.train.Saver()  # Not save to avoid over training
+
 merged = tf.summary.merge_all()
 writer = tf.summary.FileWriter(tb_path, train_op.graph)
 
@@ -203,7 +200,7 @@ def prepare_data(path):
     preprocessor = Preprocessor()
     data = txtops.cnn_dailymail_as_list(path)
 
-    data = data[:]
+    data = data[11000:]
 
     article_ids = []
     highlight_ids = []
@@ -215,10 +212,16 @@ def prepare_data(path):
                                                      raw=True,
                                                      lemmatizer=False,
                                                      remove_digit=False)
+        data[i][0] = data[i][0][4:]
+        data[i][0] = [word for word in data[i][0] if word != ""]
+
+        data[i][1] = data[i][1][0]  # only take one sentence -> try to generate one sentence summaries
         data[i][1] = preprocessor.default_preprocess(preprocessor.merge_sentences(data[i][1]),
                                                      raw=True,
                                                      lemmatizer=False,
                                                      remove_digit=False)
+        # data[i][1] = data[i][1][1:]
+        data[i][1] = [word for word in data[i][1] if word != ""]
 
         article_ids.append([hparams.tgt_sos_id] + [embeddings.word_to_ind_dict.get(word, hparams.unk_word_id)
                                                    for word in data[i][0]])
@@ -333,4 +336,9 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             to_inspect = _inds[0][0]
             summary_words = [embeddings.ind_to_word_dict[i] for i in to_inspect]
             generated_summary = " ".join(summary_words)
-            tqdm.write(generated_summary)
+
+            original_summary = " ".join([embeddings.ind_to_word_dict[i] for i in y_batch[0]])
+            original_article = " ".join([embeddings.ind_to_word_dict[i] for i in x_batch[0]])
+
+            tqdm.write("Original Summary: %s" % original_summary)
+            tqdm.write("Generated Summary: %s" % generated_summary)
