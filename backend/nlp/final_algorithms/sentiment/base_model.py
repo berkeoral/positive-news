@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow.contrib as contrib
 
 from sklearn.datasets import fetch_20newsgroups
+from sklearn.utils import shuffle
 from tqdm import tqdm
 
 from backend.nlp.basics.embedding_ops import EmbeddingsV2
@@ -15,19 +16,15 @@ from backend.utils.txtops import TextOps
 
 class BaseModel(object):
     def __init__(self, wembs_path, name_space, tb_path, filter_most_frequent_words=-1):
-        self.embeddings = EmbeddingsV2(wembs_path, filter_most_frequent_words=filter_most_frequent_words)
-        self.word_embeddings = tf.get_variable("word_embeddings", initializer=self.embeddings.word_embeddings,
-                                               trainable=False)
-        print("Embedding tensor initialized")
-
+        self.name_space = name_space
         self.data = None
         self.train_generator = None
+        self.label_dict = {}
         self.tb_path = tb_path
 
-        self.name_space = name_space
         self.hparams = contrib.training.HParams(
-            batch_size=128,
-            epochs=3,
+            batch_size=16,
+            epochs=3,  # models quickly overfits
 
             keep_prob=0.8,
             max_seq_len=300,
@@ -36,8 +33,23 @@ class BaseModel(object):
             n_hidden=128,
             attention_size=50,
             learning_rate=0.01,
-            display_step=10,
+            display_step=25,
         )
+        with tf.device("cpu:0"):
+            with tf.variable_scope("WordEmbeddings") as scope:
+                self.embeddings = EmbeddingsV2(wembs_path, filter_most_frequent_words=filter_most_frequent_words)
+                try:
+                    self.word_embeddings = tf.get_variable("word_embeddings",
+                                                           initializer=self.embeddings.word_embeddings,
+                                                           trainable=False)
+                    print("Initialized word embeddings")
+                except ValueError:
+                    scope.reuse_variables()
+                    self.word_embeddings = tf.get_variable("word_embeddings",
+                                                           initializer=self.embeddings.word_embeddings,
+                                                           trainable=False)
+                    print("Reusing initialized word embeddings")
+        del self.embeddings.word_embeddings
 
     def graph(self):
         with tf.variable_scope(self.name_space):
@@ -65,20 +77,21 @@ class BaseModel(object):
                 W = tf.Variable(tf.truncated_normal([self.hparams.n_hidden * 2, self.hparams.n_classes],
                                                     stddev=0.1))
                 b = tf.Variable(tf.constant(0., shape=[self.hparams.n_classes]))
-                label_predicted = tf.squeeze(tf.nn.xw_plus_b(drop, W, b))
+                self.label_predicted = tf.squeeze(tf.nn.xw_plus_b(drop, W, b))
                 tf.summary.histogram('W', W)
 
             with tf.variable_scope("Metrics"):
                 self.loss = tf.reduce_mean(
-                    tf.nn.sigmoid_cross_entropy_with_logits(logits=label_predicted, labels=self.label))
+                    tf.nn.sigmoid_cross_entropy_with_logits(logits=self.label_predicted, labels=self.label))
+                self.prediction_index = tf.argmax(tf.sigmoid(self.label_predicted), output_type=tf.int32)
                 tf.summary.scalar('loss', self.loss)
                 self.optimiser = tf.train.AdamOptimizer(learning_rate=self.hparams.learning_rate).minimize(self.loss)
                 self.accuracy = tf.reduce_mean(
-                    tf.cast(tf.equal(tf.round(tf.sigmoid(label_predicted)), self.label), tf.float32))
+                    tf.cast(tf.equal(tf.round(tf.sigmoid(self.label_predicted)), self.label), tf.float32))
                 tf.summary.scalar('accuracy', self.accuracy)
 
             with tf.variable_scope("tensorboard"):
-                self.merged = tf.summary.merge_all()
+                self.merged = tf.summary.merge_all(scope=self.name_space)
                 self.writer = tf.summary.FileWriter(self.tb_path, self.accuracy.graph)
                 self.saver = tf.train.Saver()
 
@@ -106,7 +119,8 @@ class BaseModel(object):
                                                                feed_dict={self.input_word_ids: x_batch,
                                                                           self.label: y_batch,
                                                                           self.sequence_length: sql_batch,
-                                                                          self.keep_probability: self.hparams.keep_prob})
+                                                                          self.keep_probability: self.hparams.keep_prob}
+                                                               )
                 _loss += loss_tr
                 _acc += acc_tr
                 if batch % self.hparams.display_step == 0:
@@ -116,12 +130,13 @@ class BaseModel(object):
                                                                               str(_loss / self.hparams.display_step),
                                                                               str(_acc / self.hparams.display_step)))
                     _loss = _acc = 0.
+            sess.close()
 
-    def infer(self):
-        assert self.data is not None, "Data not initialized"
+    def evaluator(self):
         assert self.saver is not None, "Graph is not initialized"
-        assert self.train_generator is not None, "Input generator is not initialized"
-        with tf.Session as sess:
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
+        with tf.Session(graph=self.prediction_index.graph,
+                                   config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             sess.run(tf.global_variables_initializer())
             checkpoint_file = os.path.join(self.tb_path, "model.ckpt")
             try:
@@ -130,8 +145,12 @@ class BaseModel(object):
                 print("Failed to restore checkpoint %s" % checkpoint_file)
                 return
             while True:
-                # TODO
-                yield None
+                article_ids, seq_len = yield
+                _pred_label = sess.run([self.prediction_index], feed_dict={self.input_word_ids: article_ids,
+                                                                           self.sequence_length: seq_len,
+                                                                           self.keep_probability: self.hparams.keep_prob})
+                label = self.label_dict[_pred_label[0]]
+                yield label
 
     # Taken from: https://github.com/ilivans/tf-rnn-attention/blob/master/attention.py
     def attention(self, inputs, attention_size, time_major=False, return_alphas=False):
@@ -163,7 +182,17 @@ class BaseModel(object):
     def data_func(self):
         pass
 
-    # yields input word_ids, target_labels, input_sequence_length
-    @abc.abstractmethod
     def batch_generator(self, batch_size):
-        pass
+        self.data[0], self.data[1], self.data[2] = shuffle(self.data[0], self.data[1], self.data[2])
+        i = 0
+        while True:
+            if i < len(self.data[0]):
+                _x = self.data[0][i:i + batch_size]
+                _y = self.data[1][i:i + batch_size]
+                _x_sql = self.data[2][i:i + batch_size]
+                yield _x, _y, _x_sql
+                i += batch_size
+            else:
+                i = 0
+                self.data[0], self.data[1], self.data[2] = shuffle(self.data[0], self.data[1], self.data[2])
+
