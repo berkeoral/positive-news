@@ -10,12 +10,11 @@ class Sources:
 
     def get_sources(self):
         ret_list = []
-        with filelock.FileLock(self.filename):
-            with open(self.filename, 'r', encoding='utf-8') as file:
-                content = file.read()
-                temp_list = content.split(" ")
-                for i in range(len(temp_list)):
-                    ret_list.append(temp_list[i])
+        with open(self.filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+            temp_list = content.split(" ")
+            for i in range(len(temp_list)):
+                ret_list.append(temp_list[i])
         return ret_list[0:len(ret_list)-1]
 
     @staticmethod

@@ -1,6 +1,9 @@
+import sys
+
 import newspaper
 
 from langdetect import detect
+from tqdm import tqdm
 
 from backend.utils.utils import Utils
 from backend.crawler.news_sources.source import Sources
@@ -19,9 +22,9 @@ class Crawler:
 
     def __init_papers(self):
         source_urls = Sources().get_sources()
-        for source_url in source_urls:
+        for source_url in tqdm(source_urls, file=sys.stdout):
             try:
-                print("Initialising paper: " + source_url)
+                tqdm.write("Initialising paper: " + source_url)
                 paper = newspaper.build(source_url,
                                         memoize_articles=True,
                                         keep_article_html=True,
@@ -36,18 +39,18 @@ class Crawler:
                 print('An error occurred.')
 
     def __start_crawl(self):
-        print("Initialized \" " + str(self.papers.__len__()) + " \" papers, starting to crawl articles")
-        for paper in self.papers:
+        tqdm.write("Initialized \" " + str(self.papers.__len__()) + " \" papers, starting to crawl articles")
+        for paper in tqdm(self.papers, file=sys.stdout):
             paper.articles = [article for article in paper.articles
                               if Utils().is_eng_suffix(None, article.url)
                               and Utils().is_eng_suffix(None, article.source_url)]
             for article in paper.articles:
-                article.build()
-                if detect(article.text) == "en":
-                    self.textops.append_records(article.url, article.title, article.text)
-                    print(article.meta_lang)
-                    print(article.url)
-                    print(article.title)
-                    print(article.summary)
-                    print("----------------------------------------")
+                try:
+                    article.build()
+                    if detect(article.text) == "en":
+                        self.textops.append_records(article.url, article.title, article.text)
+                        tqdm.write(article.title)
+                except:
+                    pass
+
 

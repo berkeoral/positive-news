@@ -62,5 +62,12 @@ for article in test:
     elif article[3] == "m":
         m.append(article)
 
+from sklearn.datasets import fetch_rcv1
+
+rcv1 = fetch_rcv1()
+print(rcv1.target_names[:].tolist())
+
+
+
 
 print("debug")
