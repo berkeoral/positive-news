@@ -3,6 +3,8 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/CNN_Daily Mail_Dataset" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/web_interface/positivenews_env" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/venv1" />
     </content>
