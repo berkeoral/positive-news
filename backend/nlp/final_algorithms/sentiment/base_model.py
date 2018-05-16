@@ -24,10 +24,10 @@ class BaseModel(object):
 
         self.hparams = contrib.training.HParams(
             batch_size=16,
-            epochs=3,  # models quickly overfits
+            epochs=10,  # models quickly overfits
 
             keep_prob=0.8,
-            max_seq_len=300,
+            max_seq_len=500,
 
             n_classes=-1,
             n_hidden=128,
@@ -82,8 +82,8 @@ class BaseModel(object):
 
             with tf.variable_scope("Metrics"):
                 self.loss = tf.reduce_mean(
-                    tf.nn.sigmoid_cross_entropy_with_logits(logits=self.label_predicted, labels=self.label))
-                self.prediction_index = tf.argmax(tf.sigmoid(self.label_predicted), output_type=tf.int32)
+                    tf.nn.sigmoid_cross_entropy_with_logits(logits=self.label_predicted, labels=self.label)) + 1e-8
+                self.prediction_index = tf.argmax(self.label_predicted, axis=1, output_type=tf.int32)
                 tf.summary.scalar('loss', self.loss)
                 self.optimiser = tf.train.AdamOptimizer(learning_rate=self.hparams.learning_rate).minimize(self.loss)
                 self.accuracy = tf.reduce_mean(
@@ -136,7 +136,7 @@ class BaseModel(object):
         assert self.saver is not None, "Graph is not initialized"
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.3)
         with tf.Session(graph=self.prediction_index.graph,
-                                   config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+                        config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             sess.run(tf.global_variables_initializer())
             checkpoint_file = os.path.join(self.tb_path, "model.ckpt")
             try:
@@ -146,11 +146,12 @@ class BaseModel(object):
                 return
             while True:
                 article_ids, seq_len = yield
-                _pred_label = sess.run([self.prediction_index], feed_dict={self.input_word_ids: article_ids,
-                                                                           self.sequence_length: seq_len,
-                                                                           self.keep_probability: self.hparams.keep_prob})
-                label = self.label_dict[_pred_label[0]]
-                yield label
+                _pred_labels = sess.run(self.prediction_index, feed_dict={self.input_word_ids: article_ids,
+                                                                            self.sequence_length: seq_len,
+                                                                            self.keep_probability: self.hparams.keep_prob})
+                tqdm.write(str(_pred_labels))
+                labels = [self.label_dict[_pred_labels[i]] for i in range(len(_pred_labels))]
+                yield labels
 
     # Taken from: https://github.com/ilivans/tf-rnn-attention/blob/master/attention.py
     def attention(self, inputs, attention_size, time_major=False, return_alphas=False):
@@ -195,4 +196,3 @@ class BaseModel(object):
             else:
                 i = 0
                 self.data[0], self.data[1], self.data[2] = shuffle(self.data[0], self.data[1], self.data[2])
-

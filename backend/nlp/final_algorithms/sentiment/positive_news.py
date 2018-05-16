@@ -11,8 +11,6 @@ class PositiveNews(BaseModel):
     def __init__(self, wembs_path, name_space, tb_path, data_path, filter_most_frequent_words=-1):
         super().__init__(wembs_path, name_space, tb_path, filter_most_frequent_words)
 
-        self.hparams.max_seq_len = 500  # TODO  refactor
-
         self.data_path = data_path
         self.data_func()
         self.train_generator = self.batch_generator(self.hparams.batch_size)
