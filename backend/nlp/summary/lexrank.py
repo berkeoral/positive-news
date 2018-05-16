@@ -3,7 +3,6 @@ Implementation of original Lexrank algorithm
 """
 
 import math
-import numpy as np
 
 from backend.nlp.summary.eval import *
 
@@ -24,11 +23,10 @@ class LexRank:
         if debug > 0:
             self.raw_data = self.raw_data[:debug]
         self.data = [[], []]
-        self.__prepare_data()
-        self.__train_tf_idf()
-        print("debug")
+        self._prepare_data()
+        self._train_tf_idf()
 
-    def __prepare_data(self):
+    def _prepare_data(self):
         for _data in self.raw_data:
             article = self.preprocessor.sentences_of_words(_data[2])
             article = [self.preprocessor.default_preprocess(sentence, lemmatizer=True)
@@ -37,7 +35,7 @@ class LexRank:
             self.data[0].append(article)
 
     # tf calculation is redundant
-    def __train_tf_idf(self):
+    def _train_tf_idf(self):
         number_of_document = 0
         flag = set()
         for document in self.data[0]:
@@ -56,7 +54,7 @@ class LexRank:
         for key in self.idf:
             self.idf[key] = math.log2(number_of_document/self.idf[key])
 
-    def __idf_modified_cosine(self, s1, s2):
+    def _idf_modified_cosine(self, s1, s2):
         words_set = set(s1 + s2)
         def tf(word, sentence):
             count = 0
@@ -76,19 +74,19 @@ class LexRank:
         divisor = math.sqrt(divisor_x) * math.sqrt(divisor_y)
         return divident/divisor
 
-    def __form_graph(self, document, threshold=0.1):
+    def _form_graph(self, document, threshold=0.1):
         dim = len(document)
         graph = np.zeros((dim, dim), dtype=float)
         for i in range(dim):
             for j in range(i + 1):
-                distance = self.__idf_modified_cosine(document[i], document[j])
+                distance = self._idf_modified_cosine(document[i], document[j])
                 if distance > threshold:
                     graph[j][i] = graph[i][j] = distance
                 else:
                     graph[j][i] = graph[i][j] = 0
         return graph
 
-    def __rank_sentences(self, graph, damping=0.85):
+    def _rank_sentences(self, graph, damping=0.85):
         dim = graph.shape[0]
         scores = np.zeros(dim)
         for i in range(dim):
@@ -107,8 +105,8 @@ class LexRank:
         lexrank_scores = []
         # Calculate summaries
         for i in range(len(self.raw_data)):
-            graph = self.__form_graph(self.data[0][i])
-            lexrank_scores.append(self.__rank_sentences(graph))
+            graph = self._form_graph(self.data[0][i])
+            lexrank_scores.append(self._rank_sentences(graph))
             summary_ind = np.argsort(-lexrank_scores[i])
             originals_debug.append(self.raw_data[i][2])
             sentences = sent_tokenize(self.raw_data[i][2])
