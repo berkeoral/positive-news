@@ -113,7 +113,7 @@ class TextOps:
         ret = []
         for ds in os.listdir(base_path):
             _ds_path = base_path + "/%s" % ds
-            for file_path in tqdm(os.listdir(_ds_path), file=sys.stdout):
+            for file_path in tqdm(os.listdir(_ds_path), file=sys.stdout, desc="Reading CNN-Daily Mail Dataset from disk"):
                 with open(_ds_path + "/%s" % file_path, encoding="utf-8") as file:
                     content = file.read()
                     summ_ind = content.index("@highlight")

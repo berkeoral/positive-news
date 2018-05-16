@@ -28,7 +28,7 @@ max_vocab_size = 200000
 positive_model = PositiveNews(wembs_path=wemb_path, name_space=positivenews_name_space, data_path=positive_path,
                               tb_path=positive_tb_path, filter_most_frequent_words=max_vocab_size)
 
-#positive_model.train()
+positive_model.train()
 
 txt_ops = TextOps()
 nlpdb = txt_ops.records_as_list(nlpdb_path)
@@ -70,7 +70,7 @@ for i in tqdm(range(5000, 6000), file=sys.stdout):
     article_ids, article_seq_len = preprocess(article[2])
     sentiment = send_routine(positivenews_evaluator, article_ids, article_seq_len)
 
-    article += [sentiment]
+    article += sentiment
     evaluated.append(article)
     tqdm.write("Title: %s\n Sentiment: %s\n" % (article[1], sentiment))
     tqdm.write("_-*-" * 10)
@@ -85,9 +85,9 @@ def export(path, data):
             line = "\t".join([article[1], article[-1]])
             print(line, file=file)
 
-picked = [article for article in evaluated if article[-1] in ["Positive", "Uplifting"]]
+
+picked = [article for article in evaluated if
+          article[-1] in [positive_model.label_dict[3], positive_model.label_dict[4]]]
 
 export(evaluated_path, evaluated)
 export(picked_path, picked)
-
-

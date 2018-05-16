@@ -23,7 +23,7 @@ class Preprocessor:
 
         input = [((word.lower()).translate(str.maketrans('', '', string.punctuation))).rstrip()
                  for word in input if word != "."]
-
+        input = [word for word in input if word != ""]
         if remove_digit:
             input = [word for word in input if not any(char.isdigit() for char in word)]
         if remove_stopwords:

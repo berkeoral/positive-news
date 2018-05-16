@@ -35,16 +35,13 @@ TB_RNN_WITH_ATTENTION = "/home/berke/Desktop/workspace/bitirme/positive-news/bac
 TB_DFN = "/home/berke/Desktop/workspace/bitirme/positive-news/backend/nlp/sentiment_analysis/dffn_classifier/tb_l.sgs"
 
 
-def __start_crawler():
+def _start_crawler():
     print("Starting crawler")
     arr = TextOps().records_as_list(TextOps().filename)
-    crawler_thread = threading.Thread(target=Crawler().crawl)
-    crawler_thread.start()
-    crawler_thread.join()
-    __start_crawler()
 
 
-def __model_test():
+
+def _model_test():
     start = time.time()
     print("Loading embeddings")
     embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE,
@@ -61,7 +58,7 @@ def __model_test():
     print("Time elapsed " + str(end_of_execution - start))
 
 
-def __summary_test():
+def _summary_test():
     start = time.time()
     print("Loading embeddings")
     embeddings = Embeddings(WORD_EMBEDDINGS_FOLDER + WORD_EMBEDDING_FILE, WORD_FREQUENCIES)
@@ -78,9 +75,9 @@ def __summary_test():
 
 
 def main():
-    #__summary_test()
-    __model_test()
-    #__start_crawler()
+    #_summary_test()
+    #_model_test()
+    _start_crawler()
     #TextOps().tag_papers_()
 
 

@@ -4,6 +4,7 @@
       <w>embedder</w>
       <w>inclose</w>
       <w>lemmatizer</w>
+      <w>lexrank</w>
       <w>lstm</w>
       <w>numof</w>
       <w>pagerank</w>
